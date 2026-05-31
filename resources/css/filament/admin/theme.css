@@ -1,0 +1,130 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+@source '../../../../vendor/wezlo/filament-search-spotlight/resources/views/**/*';
+
+/* Connexion admin — fond clair avec logo orange */
+.fi-simple-layout {
+  background: linear-gradient(145deg, #ffffff 0%, #fff8f0 45%, #fef3e2 100%) !important;
+}
+
+.fi-simple-main-ctn {
+  box-shadow: 0 20px 50px rgba(243, 146, 0, 0.12);
+  border: 1px solid rgba(243, 146, 0, 0.15);
+  border-radius: 1rem;
+}
+
+.fi-simple-header .fi-logo img,
+.fi-topbar .fi-logo img {
+  filter: invert(52%) sepia(98%) saturate(1200%) hue-rotate(360deg) brightness(103%) contrast(101%);
+}
+
+/* Mode clair — sidebar blanche, actif orange */
+html:not(.dark) .fi-sidebar {
+  background-color: #ffffff !important;
+  border-right: 1px solid #ECECEE;
+}
+
+html:not(.dark) .fi-sidebar .fi-logo img {
+  filter: invert(52%) sepia(98%) saturate(1200%) hue-rotate(360deg) brightness(103%) contrast(101%);
+}
+
+html:not(.dark) .fi-sidebar-item-btn {
+  color: #374151 !important;
+}
+
+html:not(.dark) .fi-sidebar-item.fi-active > .fi-sidebar-item-row > .fi-sidebar-item-btn,
+html:not(.dark) .fi-sidebar-item.fi-active > .fi-sidebar-item-btn,
+html:not(.dark) .fi-sidebar-item-active > .fi-sidebar-item-btn {
+  background-color: #f39200 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #d97e00;
+}
+
+html:not(.dark) .fi-sidebar-item.fi-active .fi-sidebar-item-icon,
+html:not(.dark) .fi-sidebar-item.fi-active .fi-sidebar-item-label {
+  color: #ffffff !important;
+}
+
+html:not(.dark) .fi-sidebar-group-label {
+  color: #6B7280 !important;
+}
+
+/* Mode sombre — sidebar sombre, actif orange */
+.dark .fi-sidebar {
+  background-color: #0A0A0A !important;
+}
+
+.dark .fi-sidebar .fi-logo img {
+  filter: invert(52%) sepia(98%) saturate(1200%) hue-rotate(360deg) brightness(103%) contrast(101%);
+}
+
+.dark .fi-sidebar-item.fi-active > .fi-sidebar-item-row > .fi-sidebar-item-btn,
+.dark .fi-sidebar-item.fi-active > .fi-sidebar-item-btn,
+.dark .fi-sidebar-item-active > .fi-sidebar-item-btn {
+  background-color: #f39200 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #d97e00;
+}
+
+.dark .fi-sidebar-item.fi-active .fi-sidebar-item-icon,
+.dark .fi-sidebar-item.fi-active .fi-sidebar-item-label {
+  color: #ffffff !important;
+}
+
+.fi-sidebar-item-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.fi-sidebar-item-has-help .fi-sidebar-item-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.fi-sidebar-item-help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  margin-right: 0.5rem;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: help;
+  opacity: 1;
+  transition: color 0.15s ease;
+}
+
+.fi-sidebar-item-help-btn:hover,
+.fi-sidebar-item-help-btn:focus-visible {
+  color: #f39200;
+}
+
+.fi-sidebar-item-help-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.fi-section:not(.fi-section-not-contained) {
+  border-radius: 1rem;
+  border: 1px solid #ECECEE;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.fi-section-header-heading {
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  color: #0A0A0A;
+}
+
+.fi-sidebar-item-badge {
+  background-color: #F39200 !important;
+  color: #fff !important;
+}
