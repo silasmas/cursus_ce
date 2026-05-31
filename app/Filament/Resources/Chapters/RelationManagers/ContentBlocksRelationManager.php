@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources\Chapters\RelationManagers;
 
+use App\Services\Content\ContentBlockMediaService;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -77,9 +79,20 @@ class ContentBlocksRelationManager extends RelationManager
           ->preload()
           ->helperText($help['media_asset_id']),
         TextInput::make('url')
-          ->label('URL externe')
+          ->label('URL YouTube (référence)')
           ->url()
+          ->placeholder('https://www.youtube.com/watch?v=…')
+          ->visible(fn ($get): bool => $get('type') === 'video')
           ->helperText($help['url']),
+        FileUpload::make('video_upload')
+          ->label('Fichier vidéo MP4')
+          ->disk('public')
+          ->directory('course-videos/uploads')
+          ->acceptedFileTypes(['video/mp4', 'video/webm'])
+          ->maxSize(512000)
+          ->visible(fn ($get): bool => $get('type') === 'video')
+          ->helperText('Recommandé : uploadez le MP4 exporté depuis YouTube Studio pour une lecture fiable sur la plateforme.')
+          ->columnSpanFull(),
         Textarea::make('metadata')
           ->label('Métadonnées (JSON)')
           ->columnSpanFull()
@@ -114,10 +127,38 @@ class ContentBlocksRelationManager extends RelationManager
           ->toggleable(),
       ])
       ->headerActions([
-        CreateAction::make()->label('Ajouter un contenu'),
+        CreateAction::make()
+          ->label('Ajouter un contenu')
+          ->mutateFormDataUsing(function (array $data): array {
+            unset($data['video_upload']);
+
+            return $data;
+          })
+          ->after(function ($record, array $data): void {
+            $upload = $data['video_upload'] ?? null;
+            $path = is_array($upload) ? ($upload[0] ?? null) : $upload;
+
+            if (is_string($path) && $path !== '' && $record->type === 'video') {
+              app(ContentBlockMediaService::class)->attachStoredVideo($record, $path);
+            }
+          }),
       ])
       ->recordActions([
-        EditAction::make()->label('Modifier'),
+        EditAction::make()
+          ->label('Modifier')
+          ->mutateFormDataUsing(function (array $data): array {
+            unset($data['video_upload']);
+
+            return $data;
+          })
+          ->after(function ($record, array $data): void {
+            $upload = $data['video_upload'] ?? null;
+            $path = is_array($upload) ? ($upload[0] ?? null) : $upload;
+
+            if (is_string($path) && $path !== '' && $record->type === 'video') {
+              app(ContentBlockMediaService::class)->attachStoredVideo($record, $path);
+            }
+          }),
         DeleteAction::make()->label('Supprimer'),
       ])
       ->toolbarActions([

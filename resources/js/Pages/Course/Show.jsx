@@ -2,6 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import LoadingButton from '../../Components/UI/LoadingButton';
 import UserAvatar from '../../Components/UI/UserAvatar';
+import CourseVideoPlayer from '../../Components/Course/CourseVideoPlayer';
 
 /**
  * Badge de statut pour tests et TP.
@@ -124,10 +125,19 @@ function TpSubmitForm({ tp, isReviewMode }) {
 /**
  * Lecteur de cours avec onglets tests, TP et mentor.
  */
-export default function Show({ chapter, cursus, contentBlocks, curriculum, requirements, mentor, instructor, readOnlyOnline = false }) {
+export default function Show({
+  chapter,
+  cursus,
+  contentBlocks,
+  curriculum,
+  nextChapter = null,
+  requirements,
+  mentor,
+  instructor,
+  readOnlyOnline = false,
+}) {
   const { flash } = usePage().props;
   const completeForm = useForm({});
-  const [activeBlock, setActiveBlock] = useState(contentBlocks[0]?.id ?? null);
 
   const hasQuiz = requirements?.has_quiz ?? (requirements?.quizzes?.length > 0);
   const hasTp = requirements?.has_tp ?? (requirements?.tps?.length > 0);
@@ -138,11 +148,19 @@ export default function Show({ chapter, cursus, contentBlocks, curriculum, requi
   const defaultTab = 'content';
   const [activeTab, setActiveTab] = useState(defaultTab);
 
-  const currentBlock = contentBlocks.find((b) => b.id === activeBlock) ?? contentBlocks[0];
+  const videoBlock = contentBlocks.find((block) => block.type === 'video' && (block.url || block.media_url));
+  const textBlocks = contentBlocks.filter((block) => block.type === 'text' || (block.type !== 'video' && block.body));
 
   const handleComplete = () => {
-    completeForm.post(`/mon-espace/cours/${chapter.id}/terminer`, { preserveScroll: true });
+    completeForm.post(`/mon-espace/cours/${chapter.id}/terminer`, {
+      preserveScroll: true,
+    });
   };
+
+  const showNextChapterButton = isReviewMode && nextChapter?.id && !readOnlyOnline;
+  const showCompleteButton = !isReviewMode && !readOnlyOnline;
+  const homeHref = `/mon-espace${cursus?.slug ? `?cursus=${cursus.slug}` : ''}`;
+  const showReturnHomeButton = isReviewMode && !nextChapter?.id && !readOnlyOnline;
 
   const tabs = [
     { id: 'content', label: 'Contenu', highlight: false },
@@ -173,25 +191,45 @@ export default function Show({ chapter, cursus, contentBlocks, curriculum, requi
               <h1 className="truncate font-display text-sm font-bold text-white sm:text-base">{chapter.title}</h1>
             </div>
           </div>
-          {!isReviewMode && !readOnlyOnline && (
-            <LoadingButton
-              type="button"
-              onClick={handleComplete}
-              processing={completeForm.processing}
-              loadingText="Enregistrement…"
-              disabled={!canComplete}
-              title={!canComplete ? blocking.join(' ') : ''}
-              className="btn btn-accent shrink-0 px-4 py-2 text-xs sm:text-sm disabled:opacity-50"
-            >
-              Terminer l&apos;étape →
-            </LoadingButton>
+          {!readOnlyOnline && (
+            <>
+              {showNextChapterButton && (
+                <Link
+                  href={`/mon-espace/cours/${nextChapter.id}`}
+                  className="btn btn-accent shrink-0 px-4 py-2 text-xs sm:text-sm"
+                >
+                  Chapitre suivant →
+                </Link>
+              )}
+              {showReturnHomeButton && (
+                <Link
+                  href={homeHref}
+                  className="btn btn-accent shrink-0 px-4 py-2 text-xs sm:text-sm"
+                >
+                  Retour à l&apos;accueil →
+                </Link>
+              )}
+              {showCompleteButton && (
+                <LoadingButton
+                  type="button"
+                  onClick={handleComplete}
+                  processing={completeForm.processing}
+                  loadingText="Enregistrement…"
+                  disabled={!canComplete}
+                  title={!canComplete ? blocking.join(' ') : ''}
+                  className="btn btn-accent shrink-0 px-4 py-2 text-xs sm:text-sm disabled:opacity-50"
+                >
+                  Terminer l&apos;étape →
+                </LoadingButton>
+              )}
+            </>
           )}
           {readOnlyOnline && (
             <span className="shrink-0 rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-semibold text-amber-100">
               Lecture seule — présentiel
             </span>
           )}
-          {isReviewMode && (
+          {isReviewMode && !showNextChapterButton && !showReturnHomeButton && (
             <span className="shrink-0 rounded-lg bg-green-500/20 px-3 py-1.5 text-xs font-semibold text-green-100">
               Étape validée — reprise libre
             </span>
@@ -297,32 +335,61 @@ export default function Show({ chapter, cursus, contentBlocks, curriculum, requi
         <main className="min-h-[calc(100vh-120px)] bg-white">
           {activeTab === 'content' && (
             <>
-              <div className="aspect-video w-full bg-phila-black">
-                {currentBlock?.type === 'video' && currentBlock.url ? (
-                  <iframe src={toEmbedUrl(currentBlock.url)} title={currentBlock.title || chapter.title} className="h-full w-full" allowFullScreen />
-                ) : currentBlock?.media_url ? (
-                  <video src={currentBlock.media_url} controls className="h-full w-full" />
-                ) : (
-                  <div className="flex h-full flex-col items-center justify-center gap-3 text-white/70">
-                    <img src="/images/phila-logo.png" alt="" className="logo-phila-orange h-16 w-16 rounded-full opacity-40" />
-                    <p className="text-sm">Contenu de l&apos;étape « {chapter.title} »</p>
-                  </div>
-                )}
-              </div>
+              <CourseVideoPlayer
+                youtubeUrl={videoBlock?.url}
+                streamUrl={videoBlock?.stream_url}
+                posterUrl={videoBlock?.poster_url}
+                title={videoBlock?.title || chapter.title}
+                chapterTitle={chapter.title}
+              />
+              {videoBlock?.body && (
+                <p className="border-b border-phila-gray-100 bg-phila-gray-50 px-4 py-3 text-center text-xs text-phila-gray-600 sm:px-6">
+                  {videoBlock.body}
+                </p>
+              )}
               <div className="space-y-6 px-4 py-6 sm:px-6">
-                {contentBlocks.length === 0 ? (
+                {textBlocks.length === 0 && !videoBlock ? (
                   <div className="rounded-xl bg-phila-orange-pale px-4 py-4 text-sm text-phila-gray-600">
                     Le contenu détaillé sera bientôt disponible.
                   </div>
                 ) : (
-                  contentBlocks.map((block) => (
-                    <article key={block.id} className={`rounded-xl border p-5 ${block.id === currentBlock?.id ? 'border-phila-orange/40 bg-phila-orange-pale/30' : 'border-phila-gray-100'}`}>
+                  textBlocks.map((block) => (
+                    <article key={block.id} className="rounded-xl border border-phila-gray-100 p-5">
                       {block.title && <h3 className="font-display font-bold">{block.title}</h3>}
                       {block.body && (
-                        <div className="prose prose-sm mt-3 max-w-none text-phila-gray-600" dangerouslySetInnerHTML={{ __html: block.body.replace(/\n/g, '<br>') }} />
+                        <div
+                          className="prose prose-sm mt-3 max-w-none whitespace-pre-line text-phila-gray-600"
+                          dangerouslySetInnerHTML={{ __html: block.body.replace(/\n/g, '<br>') }}
+                        />
                       )}
                     </article>
                   ))
+                )}
+
+                {showNextChapterButton && (
+                  <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-4 text-center">
+                    <p className="text-sm text-green-900">Étape terminée — poursuivez avec le chapitre suivant.</p>
+                    <Link
+                      href={`/mon-espace/cours/${nextChapter.id}`}
+                      className="btn btn-accent mt-3 inline-flex px-6 py-2 text-sm"
+                    >
+                      {nextChapter.title} →
+                    </Link>
+                  </div>
+                )}
+
+                {showReturnHomeButton && (
+                  <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-4 text-center">
+                    <p className="text-sm text-green-900">
+                      Félicitations ! Vous avez terminé la dernière étape de ce parcours.
+                    </p>
+                    <Link
+                      href={homeHref}
+                      className="btn btn-accent mt-3 inline-flex px-6 py-2 text-sm"
+                    >
+                      Retour à l&apos;accueil →
+                    </Link>
+                  </div>
                 )}
               </div>
             </>
@@ -458,10 +525,4 @@ export default function Show({ chapter, cursus, contentBlocks, curriculum, requi
       </div>
     </div>
   );
-}
-
-function toEmbedUrl(url) {
-  if (url.includes('embed')) return url;
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-  return match ? `https://www.youtube-nocookie.com/embed/${match[1]}` : url;
 }

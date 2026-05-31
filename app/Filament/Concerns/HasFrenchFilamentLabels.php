@@ -2,6 +2,7 @@
 
 namespace App\Filament\Concerns;
 
+use App\Filament\Support\FilamentConfig;
 use Filament\Navigation\NavigationItem;
 
 /**
@@ -16,9 +17,7 @@ trait HasFrenchFilamentLabels
    */
   protected static function frenchLabelConfig(): array
   {
-    $key = str_replace('\\', '.', static::class);
-
-    return config("filament_labels.{$key}", []);
+    return FilamentConfig::resourceLabels(static::class);
   }
 
   /**
@@ -28,9 +27,7 @@ trait HasFrenchFilamentLabels
    */
   protected static function adminHelpConfig(): array
   {
-    $key = str_replace('\\', '.', static::class);
-
-    return config("filament_admin_help.resources.{$key}", []);
+    return FilamentConfig::resourceAdminHelp(static::class);
   }
 
   /**

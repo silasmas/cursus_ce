@@ -54,7 +54,7 @@ class ModuleExitQuizRelationManager extends RelationManager
       ->components([
         Placeholder::make('exit_quiz_rules')
           ->label('Règles du quiz')
-          ->content('QCM avec chapitre de révision par question · Seuil configurable · Le module suivant reste verrouillé tant que le quiz n\'est pas réussi.')
+          ->content('Questions à choix multiples avec chapitre de révision par question · Seuil configurable · Le module suivant reste verrouillé tant que le quiz n\'est pas réussi.')
           ->columnSpanFull(),
         TextInput::make('title')
           ->label('Titre')

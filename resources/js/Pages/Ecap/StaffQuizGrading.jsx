@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EcapStaffLayout from '../../Components/Layout/EcapStaffLayout';
+import { pollJson, startPolling } from '../../lib/pollJson';
 
 /**
  * Liste des quiz en attente et historique (acteurs ECAP).
@@ -8,9 +9,41 @@ import EcapStaffLayout from '../../Components/Layout/EcapStaffLayout';
  * @param {Object} props Props Inertia
  * @returns {JSX.Element}
  */
-export default function StaffQuizGrading({ attempts = [], historyAttempts = [], graderScope = '' }) {
+export default function StaffQuizGrading({
+  attempts: initialAttempts = [],
+  historyAttempts: initialHistoryAttempts = [],
+  graderScope = '',
+  feedUrl = null,
+}) {
   const { flash } = usePage().props;
-  const [activeTab, setActiveTab] = useState(attempts.length > 0 ? 'pending' : 'history');
+  const [attempts, setAttempts] = useState(initialAttempts);
+  const [historyAttempts, setHistoryAttempts] = useState(initialHistoryAttempts);
+  const [activeTab, setActiveTab] = useState(initialAttempts.length > 0 ? 'pending' : 'history');
+
+  useEffect(() => {
+    setAttempts(initialAttempts);
+    setHistoryAttempts(initialHistoryAttempts);
+  }, [initialAttempts, initialHistoryAttempts]);
+
+  const refreshLists = useCallback(async () => {
+    const data = await pollJson(feedUrl);
+
+    if (!data) {
+      return;
+    }
+
+    if (Array.isArray(data.attempts)) {
+      setAttempts(data.attempts);
+    }
+
+    if (Array.isArray(data.historyAttempts)) {
+      setHistoryAttempts(data.historyAttempts);
+    }
+  }, [feedUrl]);
+
+  useEffect(() => {
+    return startPolling(refreshLists, 10000, Boolean(feedUrl));
+  }, [feedUrl, refreshLists]);
 
   return (
     <EcapStaffLayout active="quiz-grading">

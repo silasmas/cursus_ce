@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Enrollments\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use App\Filament\Tables\Columns\UserTableColumn;
@@ -26,10 +27,13 @@ class EnrollmentsTable
       ->columns([
         UserTableColumn::make('user', 'Fidèle'),
         TextColumn::make('program.name')
+          ->label('Cursus')
           ->searchable(),
         TextColumn::make('course.name')
+          ->label('Cours')
           ->searchable(),
         TextColumn::make('academicSession.name')
+          ->label('Session ECAP')
           ->searchable(),
         ToggleColumn::make('is_online')
           ->label('ECAP en ligne')
@@ -42,19 +46,40 @@ class EnrollmentsTable
             ]);
           }),
         TextColumn::make('status')
+          ->label('Statut')
+          ->badge()
+          ->formatStateUsing(fn (string $state): string => match ($state) {
+            'active' => 'Actif',
+            'completed' => 'Terminé',
+            'suspended' => 'Suspendu',
+            'cancelled' => 'Annulé',
+            default => $state,
+          })
+          ->color(fn (string $state): string => match ($state) {
+            'active' => 'success',
+            'completed' => 'info',
+            'suspended' => 'warning',
+            'cancelled' => 'danger',
+            default => 'gray',
+          })
           ->searchable(),
         TextColumn::make('enrolled_at')
-          ->dateTime()
+          ->label('Inscrit le')
+          ->dateTime('d/m/Y H:i')
           ->sortable(),
         TextColumn::make('completed_at')
-          ->dateTime()
-          ->sortable(),
+          ->label('Terminé le')
+          ->dateTime('d/m/Y H:i')
+          ->sortable()
+          ->toggleable(),
         TextColumn::make('created_at')
-          ->dateTime()
+          ->label('Créé le')
+          ->dateTime('d/m/Y H:i')
           ->sortable()
           ->toggleable(isToggledHiddenByDefault: true),
         TextColumn::make('updated_at')
-          ->dateTime()
+          ->label('Modifié le')
+          ->dateTime('d/m/Y H:i')
           ->sortable()
           ->toggleable(isToggledHiddenByDefault: true),
       ])
@@ -63,11 +88,12 @@ class EnrollmentsTable
           ->label('Mode en ligne ECAP'),
       ])
       ->recordActions([
-        EditAction::make(),
+        EditAction::make()->label('Modifier'),
+        DeleteAction::make()->label('Supprimer'),
       ])
       ->toolbarActions([
         BulkActionGroup::make([
-          DeleteBulkAction::make(),
+          DeleteBulkAction::make()->label('Supprimer la sélection'),
         ]),
       ]);
   }

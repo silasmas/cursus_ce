@@ -11,6 +11,7 @@ use App\Services\Student\ChapterGateService;
 use App\Services\Student\ChapterProgressService;
 use App\Services\Student\MentorPortalService;
 use App\Support\UserPresentation;
+use App\Support\YouTubeUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -68,6 +69,7 @@ class ChapterController extends Controller
     }
 
     $curriculum = $this->progressService->curriculumFor($user, $chapter);
+    $nextChapter = $this->progressService->nextChapterFor($user, $chapter);
     $program = $chapter->course?->program;
     $cursusDef = collect(config('cursus.modules', []))->firstWhere('slug', $program?->slug);
     $requirements = $this->gateService->requirementsSummary($user, $chapter);
@@ -107,17 +109,26 @@ class ChapterController extends Controller
         'name' => $cursusDef['name'],
         'slug' => $cursusDef['slug'],
       ] : null,
-      'contentBlocks' => $chapter->contentBlocks->map(fn ($block) => [
-        'id' => $block->id,
-        'type' => $block->type,
-        'title' => $block->title,
-        'body' => $block->body,
-        'url' => $block->url,
-        'media_url' => $block->mediaAsset
-          ? asset('storage/'.$block->mediaAsset->path)
-          : null,
-      ]),
+      'contentBlocks' => $chapter->contentBlocks->map(function ($block) use ($request) {
+        $videoId = YouTubeUrl::extractVideoId($block->url);
+        $hasHostedVideo = $block->type === 'video' && $block->media_asset_id !== null;
+
+        return [
+          'id' => $block->id,
+          'type' => $block->type,
+          'title' => $block->title,
+          'body' => $block->body,
+          'url' => $block->url,
+          'youtube_video_id' => $videoId,
+          'stream_url' => $hasHostedVideo ? route('chapter.video.stream', $block) : null,
+          'poster_url' => $videoId ? YouTubeUrl::thumbnailUrl($videoId) : null,
+          'media_url' => $block->mediaAsset
+            ? asset('storage/'.$block->mediaAsset->path)
+            : null,
+        ];
+      }),
       'curriculum' => $curriculum,
+      'nextChapter' => $nextChapter,
       'requirements' => $requirements,
       'readOnlyOnline' => $readOnlyOnline,
       'mentor' => $mentorPayload,
@@ -126,7 +137,7 @@ class ChapterController extends Controller
   }
 
   /**
-   * Marque le chapitre comme terminé et redirige vers le dashboard.
+   * Marque le chapitre comme terminé et reste sur le lecteur (chapitre suivant débloqué).
    */
   public function complete(Request $request, Chapter $chapter): RedirectResponse
   {
@@ -148,19 +159,31 @@ class ChapterController extends Controller
 
     $program = $chapter->course?->program;
     $cursusSlug = $program?->slug;
+    $nextChapter = $this->progressService->nextChapterFor($user, $chapter->fresh());
+
+    $notificationUrl = $nextChapter
+      ? route('chapter.show', $nextChapter['id'])
+      : route('dashboard', $cursusSlug ? ['cursus' => $cursusSlug] : []);
+
+    $notificationLabel = $nextChapter ? 'Chapitre suivant' : 'Continuer';
 
     $this->notificationService->notify(
       $user,
       PortalNotificationType::LevelUnlocked,
       'Niveau suivant débloqué',
-      'Bravo ! L\'étape « '.$chapter->title.' » est terminée. Continuez votre parcours.',
-      route('dashboard', $cursusSlug ? ['cursus' => $cursusSlug] : []),
-      'Continuer',
-      ['chapter_id' => $chapter->id],
+      'Bravo ! L\'étape « '.$chapter->title.' » est terminée.'
+        .($nextChapter ? ' Poursuivez avec « '.$nextChapter['title'].' ».' : ' Continuez votre parcours.'),
+      $notificationUrl,
+      $notificationLabel,
+      ['chapter_id' => $chapter->id, 'next_chapter_id' => $nextChapter['id'] ?? null],
     );
 
+    $statusMessage = $nextChapter
+      ? 'Bravo ! L\'étape « '.$chapter->title.' » est terminée. Le chapitre suivant est débloqué.'
+      : 'Bravo ! Vous avez terminé la dernière étape « '.$chapter->title.' ». Retournez à l\'accueil pour poursuivre votre parcours.';
+
     return redirect()
-      ->route('dashboard', $cursusSlug ? ['cursus' => $cursusSlug] : [])
-      ->with('status', 'Bravo ! L\'étape « '.$chapter->title.' » est terminée. L\'étape suivante est débloquée.');
+      ->route('chapter.show', $chapter)
+      ->with('status', $statusMessage);
   }
 }

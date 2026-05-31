@@ -94,8 +94,8 @@ return [
     'sort_order' => 'Ordre de lecture dans le chapitre.',
     'title' => 'Titre optionnel au-dessus du bloc.',
     'body' => 'Texte HTML ou markdown selon le type « texte ».',
-    'media_asset_id' => 'Fichier de la bibliothèque média (évite de re-téléverser le même PDF ou la même vidéo).',
-    'url' => 'Lien externe (YouTube, Google Drive public, etc.) si pas de média uploadé.',
+    'media_asset_id' => 'Fichier vidéo MP4 hébergé sur la plateforme (lecture native, recommandé). Prioritaire sur l\'URL YouTube.',
+    'url' => 'Vidéo YouTube (référence) : https://www.youtube.com/watch?v=… ou https://youtu.be/… — puis lancez « php artisan content:mirror-phila-videos » pour héberger la vidéo sur la plateforme.',
     'metadata' => 'JSON technique optionnel (durée, options du lecteur). Réservé aux cas avancés.',
   ],
 ];

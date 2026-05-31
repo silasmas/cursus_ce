@@ -6,6 +6,7 @@ import FloatingStaffChatLink from '../UI/FloatingStaffChatLink';
 import PortalInstantSearch from './PortalInstantSearch';
 import PortalUserMenu from './PortalUserMenu';
 import EcapChatUnreadPoller from '../Ecap/EcapChatUnreadPoller';
+import { pollJson, startPolling } from '../../lib/pollJson';
 
 /**
  * Entrées de menu selon le rôle ECAP requis.
@@ -37,8 +38,8 @@ const NAV_ITEMS = [
 export default function EcapStaffLayout({ children, active = 'questions' }) {
   const { auth, notifications, ecapStaffRoles = { keys: [], labels: [], can_grade_quiz: false }, ecapTimeline, ecapStaffChat, ecapPrivateChat } = usePage().props;
   const user = auth?.user;
-  const pending = auth?.user?.ecapStaffPendingQuestions ?? 0;
-  const pendingQuizGrading = auth?.user?.ecapStaffPendingQuizGrading ?? 0;
+  const [pendingQuestions, setPendingQuestions] = useState(user?.ecapStaffPendingQuestions ?? 0);
+  const [pendingQuizGrading, setPendingQuizGrading] = useState(user?.ecapStaffPendingQuizGrading ?? 0);
   const roleKeys = ecapStaffRoles?.keys ?? [];
   const hideFloatingChat = active === 'messages';
   const [chatUnread, setChatUnread] = useState(ecapStaffChat?.unread_count ?? 0);
@@ -54,6 +55,35 @@ export default function EcapStaffLayout({ children, active = 'questions' }) {
     lastChatCountRef.current = count;
     setChatUnread(count);
   }, []);
+
+  useEffect(() => {
+    setPendingQuestions(user?.ecapStaffPendingQuestions ?? 0);
+    setPendingQuizGrading(user?.ecapStaffPendingQuizGrading ?? 0);
+  }, [user?.ecapStaffPendingQuestions, user?.ecapStaffPendingQuizGrading]);
+
+  useEffect(() => {
+    if (!user?.isEcapStaff) {
+      return undefined;
+    }
+
+    const refreshBadges = async () => {
+      const data = await pollJson('/ecap/acteurs/badges');
+
+      if (!data) {
+        return;
+      }
+
+      if (typeof data.ecapStaffPendingQuestions === 'number') {
+        setPendingQuestions(data.ecapStaffPendingQuestions);
+      }
+
+      if (typeof data.ecapStaffPendingQuizGrading === 'number') {
+        setPendingQuizGrading(data.ecapStaffPendingQuizGrading);
+      }
+    };
+
+    return startPolling(refreshBadges, 10000, true);
+  }, [user?.isEcapStaff]);
 
   const visibleNav = NAV_ITEMS.filter((item) => {
     if (item.requiresQuizGrader && ecapStaffRoles?.can_grade_quiz !== true) {
@@ -127,9 +157,9 @@ export default function EcapStaffLayout({ children, active = 'questions' }) {
             >
               <span>{item.icon}</span>
               <span className="flex-1">{item.label}</span>
-              {item.id === 'questions' && pending > 0 && (
+              {item.id === 'questions' && pendingQuestions > 0 && (
                 <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold">
-                  {pending}
+                  {pendingQuestions}
                 </span>
               )}
               {item.id === 'messages' && chatUnread > 0 && (

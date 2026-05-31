@@ -57,10 +57,7 @@ class QuestionsRelationManager extends RelationManager
       ->components([
         Select::make('type')
           ->label('Type')
-          ->options([
-            QuestionType::Mcq->value => 'QCM',
-            QuestionType::Written->value => 'Réponse rédigée',
-          ])
+          ->options(QuestionType::options())
           ->default(QuestionType::Mcq->value)
           ->required()
           ->native(false),
@@ -86,7 +83,7 @@ class QuestionsRelationManager extends RelationManager
           ->default(1)
           ->helperText('La somme des points de toutes les questions ne doit pas dépasser '.self::MAX_POINTS_TOTAL.'.'),
         Repeater::make('options')
-          ->label('Réponses QCM')
+          ->label('Propositions (question à choix multiples)')
           ->relationship()
           ->schema([
             TextInput::make('label')
@@ -123,6 +120,9 @@ class QuestionsRelationManager extends RelationManager
         TextColumn::make('stem')
           ->label('Énoncé')
           ->limit(60),
+        TextColumn::make('type')
+          ->label('Type')
+          ->formatStateUsing(fn (string $state): string => QuestionType::labelFor($state)),
         TextColumn::make('reviewChapter.title')
           ->label('Révision')
           ->placeholder('—')

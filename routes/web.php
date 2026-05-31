@@ -12,7 +12,9 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Student\AssessmentController;
 use App\Http\Controllers\Student\AssignmentController;
 use App\Http\Controllers\Student\ChapterController;
+use App\Http\Controllers\Student\ChapterVideoController;
 use App\Http\Controllers\Ecap\EcapPrivateChatController;
+use App\Http\Controllers\Ecap\EcapStaffBadgesController;
 use App\Http\Controllers\Ecap\StaffMessagesController;
 use App\Http\Controllers\Ecap\StaffMeditationController;
 use App\Http\Controllers\Student\EcapMemberMessagesController;
@@ -52,12 +54,14 @@ Route::middleware('auth:member')->group(function () {
   Route::match(['put', 'post'], '/mon-espace/profil', [ProfileController::class, 'update'])->name('profile.update');
   Route::get('/mon-espace/membres/{user}', [ProfileController::class, 'showMember'])->name('members.show');
   Route::get('/mon-espace/cours/{chapter}', [ChapterController::class, 'show'])->name('chapter.show');
+  Route::get('/mon-espace/contenu/{contentBlock}/video', [ChapterVideoController::class, 'stream'])->name('chapter.video.stream');
   Route::post('/mon-espace/cours/{chapter}/terminer', [ChapterController::class, 'complete'])->name('chapter.complete');
 
   Route::get('/mon-espace/tests/{assessment}', [AssessmentController::class, 'show'])->name('assessment.show');
   Route::post('/mon-espace/tests/{assessment}/demarrer', [AssessmentController::class, 'start'])->name('assessment.start');
   Route::post('/mon-espace/tests/{assessment}/tenter/{attempt}/soumettre', [AssessmentController::class, 'submit'])->name('assessment.submit');
   Route::get('/mon-espace/tests/{assessment}/resultat/{attempt}', [AssessmentController::class, 'result'])->name('assessment.result');
+  Route::get('/mon-espace/tests/{assessment}/resultat/{attempt}/feed', [AssessmentController::class, 'resultFeed'])->name('assessment.result.feed');
   Route::get('/mon-espace/mes-quiz', [QuizHistoryController::class, 'index'])->name('quiz.history');
 
   Route::get('/mon-espace/cours/{chapter}/tp', [AssignmentController::class, 'index'])->name('assignment.index');
@@ -97,6 +101,9 @@ Route::middleware('auth:member')->group(function () {
     Route::post('/tp', [StaffTpController::class, 'store'])->name('tps.store');
     Route::get('/corrections-tp', [StaffTpController::class, 'supervisorIndex'])->name('tp-corrections.index');
     Route::post('/corrections-tp/{submission}', [StaffTpController::class, 'grade'])->name('tp-corrections.grade');
+    Route::get('/badges', [EcapStaffBadgesController::class, 'index'])->name('badges');
+    Route::get('/corrections-quiz/feed', [StaffQuizGradingController::class, 'feed'])->name('quiz-grading.feed');
+    Route::get('/corrections-quiz/{attempt}/feed', [StaffQuizGradingController::class, 'attemptFeed'])->name('quiz-grading.attempt-feed');
     Route::get('/corrections-quiz', [StaffQuizGradingController::class, 'index'])->name('quiz-grading.index');
     Route::get('/corrections-quiz/{attempt}', [StaffQuizGradingController::class, 'show'])->name('quiz-grading.show');
     Route::post('/corrections-quiz/{attempt}', [StaffQuizGradingController::class, 'grade'])->name('quiz-grading.grade');

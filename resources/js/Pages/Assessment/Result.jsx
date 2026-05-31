@@ -1,4 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useCallback, useEffect, useState } from 'react';
+import { pollJson, startPolling } from '../../lib/pollJson';
 
 /**
  * Résultats d'un test avec correction détaillée et liens de révision.
@@ -8,36 +10,73 @@ import { Head, Link, usePage } from '@inertiajs/react';
  */
 export default function Result(props) {
   const pageProps = usePage().props;
+  const initial = { ...pageProps, ...props };
+
+  const [resultState, setResultState] = useState({
+    isPendingGrading: initial.is_pending_grading ?? initial.isPendingGrading ?? false,
+    passed: initial.passed ?? false,
+    score: initial.score ?? null,
+    passingScore: initial.passing_score ?? initial.passingScore ?? 0,
+    gradedByName: initial.graded_by_name ?? initial.gradedByName ?? null,
+    gradedAt: initial.graded_at ?? initial.gradedAt ?? null,
+    submittedAt: initial.submitted_at ?? initial.submittedAt ?? null,
+    staffComments: initial.staff_comments ?? initial.staffComments ?? [],
+    questions: initial.questions ?? [],
+    reviews: initial.reviews ?? [],
+  });
+
   const {
-    status,
-    is_pending_grading: isPendingGradingProp,
-    isPendingGrading: isPendingGradingCamel,
-    passed,
-    score,
-    passing_score: passingScore,
-    is_module_exit_quiz: isModuleExitQuiz,
+    isModuleExitQuiz: isModuleExitQuizProp,
+    is_module_exit_quiz: isModuleExitQuizSnake,
     assessment,
     module_name: moduleName,
-    graded_by_name: gradedByNameSnake,
-    gradedByName: gradedByNameCamel,
-    graded_at: gradedAtSnake,
-    gradedAt: gradedAtCamel,
-    submitted_at: submittedAtSnake,
-    submittedAt: submittedAtCamel,
-    staff_comments: staffCommentsSnake,
-    staffComments: staffCommentsCamel,
     history_url: historyUrlSnake,
     historyUrl: historyUrlCamel,
-    questions = [],
-    reviews = [],
-  } = { ...pageProps, ...props };
+    feed_url: feedUrlSnake,
+    feedUrl: feedUrlCamel,
+  } = initial;
 
-  const isPendingGrading = isPendingGradingProp ?? isPendingGradingCamel ?? false;
-  const gradedByName = gradedByNameSnake ?? gradedByNameCamel;
-  const gradedAt = gradedAtSnake ?? gradedAtCamel;
-  const submittedAt = submittedAtSnake ?? submittedAtCamel;
-  const staffComments = staffCommentsSnake ?? staffCommentsCamel ?? [];
+  const isModuleExitQuiz = isModuleExitQuizProp ?? isModuleExitQuizSnake ?? false;
   const historyUrl = historyUrlSnake ?? historyUrlCamel ?? '/mon-espace/mes-quiz';
+  const feedUrl = feedUrlSnake ?? feedUrlCamel ?? null;
+
+  const {
+    isPendingGrading,
+    passed,
+    score,
+    passingScore,
+    gradedByName,
+    gradedAt,
+    submittedAt,
+    staffComments,
+    questions,
+    reviews,
+  } = resultState;
+
+  const refreshResult = useCallback(async () => {
+    const data = await pollJson(feedUrl);
+
+    if (!data) {
+      return;
+    }
+
+    setResultState({
+      isPendingGrading: data.is_pending_grading ?? data.isPendingGrading ?? false,
+      passed: data.passed ?? false,
+      score: data.score ?? null,
+      passingScore: data.passing_score ?? data.passingScore ?? 0,
+      gradedByName: data.graded_by_name ?? data.gradedByName ?? null,
+      gradedAt: data.graded_at ?? data.gradedAt ?? null,
+      submittedAt: data.submitted_at ?? data.submittedAt ?? null,
+      staffComments: data.staff_comments ?? data.staffComments ?? [],
+      questions: data.questions ?? [],
+      reviews: data.reviews ?? [],
+    });
+  }, [feedUrl]);
+
+  useEffect(() => {
+    return startPolling(refreshResult, 8000, Boolean(feedUrl));
+  }, [feedUrl, refreshResult]);
 
   const mcqQuestions = questions.filter((item) => item.type === 'mcq');
   const writtenQuestions = questions.filter((item) => item.type === 'written');

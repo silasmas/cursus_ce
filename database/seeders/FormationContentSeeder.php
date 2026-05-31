@@ -446,9 +446,17 @@ class FormationContentSeeder extends Seeder
   }
 
   /**
-   * Ajoute des blocs de contenu de démonstration au premier chapitre PHILA.
+   * Alimente texte + vidéo YouTube pour tous les chapitres publiés.
    */
   private function seedDemoContent(): void
+  {
+    app(\App\Services\Content\ChapterYouTubeContentService::class)->seedAllPublishedChapters();
+  }
+
+  /**
+   * @deprecated Conservé pour référence — remplacé par ChapterYouTubeContentService.
+   */
+  private function seedDemoContentLegacy(): void
   {
     $chapter = Chapter::query()
       ->whereHas('course.program', fn ($q) => $q->where('slug', 'connaissez-phila'))

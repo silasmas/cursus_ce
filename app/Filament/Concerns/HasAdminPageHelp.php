@@ -2,6 +2,7 @@
 
 namespace App\Filament\Concerns;
 
+use App\Filament\Support\FilamentConfig;
 use App\Filament\Resources\Pages\CreateRecord as AppCreateRecord;
 use App\Filament\Resources\Pages\EditRecord as AppEditRecord;
 use App\Filament\Resources\Pages\ViewRecord as AppViewRecord;
@@ -25,11 +26,8 @@ trait HasAdminPageHelp
       return null;
     }
 
-    $resourceKey = str_replace('\\', '.', $resourceClass);
     $pageType = $this->adminPageType();
-
-    $configured = config("filament_admin_help.resources.{$resourceKey}.pages.{$pageType}")
-      ?? config("filament_admin_help.resources.{$resourceKey}.pages.list");
+    $configured = FilamentConfig::resourceAdminHelpPage($resourceClass, $pageType);
 
     if (filled($configured)) {
       return $configured;

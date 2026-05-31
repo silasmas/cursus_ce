@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import EcapStaffLayout from '../../Components/Layout/EcapStaffLayout';
+import { pollJson, startPolling } from '../../lib/pollJson';
 
 /**
  * Correction d'un quiz avec réponses rédigées (verrou collaboratif).
@@ -8,9 +9,14 @@ import EcapStaffLayout from '../../Components/Layout/EcapStaffLayout';
  * @param {Object} props Props Inertia
  * @returns {JSX.Element}
  */
-export default function StaffQuizGradingShow({ attempt: initialAttempt, lock_acquired: lockAcquired = false }) {
+export default function StaffQuizGradingShow({
+  attempt: initialAttempt,
+  lock_acquired: lockAcquired = false,
+  feedUrl = null,
+}) {
   const { flash } = usePage().props;
   const [attempt, setAttempt] = useState(initialAttempt);
+  const submittingRef = useRef(false);
   const canEdit = attempt?.can_edit === true;
   const isGraded = attempt?.is_graded === true;
   const isLockedByOther = attempt?.lock?.is_locked === true;
@@ -25,6 +31,33 @@ export default function StaffQuizGradingShow({ attempt: initialAttempt, lock_acq
     setAttempt(initialAttempt);
     setGrades(buildGrades(initialAttempt));
   }, [initialAttempt]);
+
+  const refreshAttempt = useCallback(async () => {
+    if (submittingRef.current) {
+      return;
+    }
+
+    const data = await pollJson(feedUrl);
+
+    if (!data?.attempt) {
+      return;
+    }
+
+    setAttempt((previous) => {
+      const nextAttempt = data.attempt;
+      const preserveGrades = previous?.can_edit === true;
+
+      if (!preserveGrades) {
+        setGrades(buildGrades(nextAttempt));
+      }
+
+      return nextAttempt;
+    });
+  }, [feedUrl]);
+
+  useEffect(() => {
+    return startPolling(refreshAttempt, 8000, Boolean(feedUrl));
+  }, [feedUrl, refreshAttempt]);
 
   useEffect(() => {
     const releaseUrl = `/ecap/acteurs/corrections-quiz/${attempt.id}/unlock`;
@@ -67,6 +100,7 @@ export default function StaffQuizGradingShow({ attempt: initialAttempt, lock_acq
 
   const submitGrades = async () => {
     setSubmitting(true);
+    submittingRef.current = true;
 
     try {
       const url = `/ecap/acteurs/corrections-quiz/${attempt.id}`;
@@ -106,6 +140,7 @@ export default function StaffQuizGradingShow({ attempt: initialAttempt, lock_acq
       router.reload({ only: ['attempt', 'lock_acquired'] });
     } finally {
       setSubmitting(false);
+      submittingRef.current = false;
     }
   };
 
@@ -115,6 +150,7 @@ export default function StaffQuizGradingShow({ attempt: initialAttempt, lock_acq
     }
 
     setCommentSubmitting(true);
+    submittingRef.current = true;
 
     try {
       const response = await fetch(`/ecap/acteurs/corrections-quiz/${attempt.id}/avis`, {
@@ -144,6 +180,7 @@ export default function StaffQuizGradingShow({ attempt: initialAttempt, lock_acq
       router.reload({ only: ['attempt', 'lock_acquired'] });
     } finally {
       setCommentSubmitting(false);
+      submittingRef.current = false;
     }
   };
 

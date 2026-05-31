@@ -328,6 +328,8 @@ class AssessmentAttemptService
       'staffComments' => $staffComments,
       'history_url' => url('/mon-espace/mes-quiz'),
       'historyUrl' => url('/mon-espace/mes-quiz'),
+      'feed_url' => route('assessment.result.feed', [$assessment, $attempt], false),
+      'feedUrl' => route('assessment.result.feed', [$assessment, $attempt], false),
       'questions' => $questions,
       'reviews' => $reviews,
     ];

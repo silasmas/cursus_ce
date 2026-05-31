@@ -53,6 +53,52 @@ class StaffQuizGradingController extends Controller
       'attempts' => $this->quizGradingService->pendingAttemptsForStaff($user),
       'historyAttempts' => $this->quizGradingService->gradedAttemptsForStaff($user),
       'graderScope' => $this->quizGradingService->graderScopeLabel($user),
+      'feedUrl' => route('ecap.staff.quiz-grading.feed'),
+    ]);
+  }
+
+  /**
+   * Flux JSON des listes en attente et historique (polling).
+   */
+  public function feed(Request $request): JsonResponse|HttpResponse
+  {
+    $user = $request->user('member');
+
+    if ($denied = $this->denyUnlessQuizGrader($request, $user, 'Corrections quiz')) {
+      if ($denied instanceof JsonResponse) {
+        return $denied;
+      }
+
+      abort(403);
+    }
+
+    return response()->json([
+      'attempts' => $this->quizGradingService->pendingAttemptsForStaff($user),
+      'historyAttempts' => $this->quizGradingService->gradedAttemptsForStaff($user),
+    ]);
+  }
+
+  /**
+   * Flux JSON d'une tentative en correction (polling).
+   */
+  public function attemptFeed(Request $request, AssessmentAttempt $attempt): JsonResponse|HttpResponse
+  {
+    $user = $request->user('member');
+
+    if ($denied = $this->denyUnlessQuizGrader($request, $user, 'Correction d\'un quiz')) {
+      if ($denied instanceof JsonResponse) {
+        return $denied;
+      }
+
+      abort(403);
+    }
+
+    if (! $this->gradingService->canUserGrade($user, $attempt)) {
+      abort(403);
+    }
+
+    return response()->json([
+      'attempt' => $this->gradingService->gradingPayload($attempt->fresh(), $user),
     ]);
   }
 
@@ -86,6 +132,7 @@ class StaffQuizGradingController extends Controller
     return Inertia::render('Ecap/StaffQuizGradingShow', [
       'attempt' => $this->gradingService->gradingPayload($attempt->fresh(), $user),
       'lock_acquired' => $lockAcquired,
+      'feedUrl' => route('ecap.staff.quiz-grading.attempt-feed', $attempt),
     ]);
   }
 

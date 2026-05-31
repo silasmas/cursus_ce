@@ -76,6 +76,7 @@ class ContentBlockForm
             TextInput::make('url')
               ->label('URL externe')
               ->url()
+              ->placeholder('https://www.youtube.com/watch?v=… ou https://youtu.be/…')
               ->helperText($help['url']),
             Textarea::make('metadata')
               ->label('Métadonnées (JSON)')

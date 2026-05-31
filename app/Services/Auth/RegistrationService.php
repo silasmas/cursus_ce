@@ -9,6 +9,7 @@ use App\Models\Program;
 use App\Models\ProgramAccess;
 use App\Models\SessionVacation;
 use App\Models\User;
+use App\Services\Ecap\EcapStudentOnboardingService;
 use App\Services\ProgramAccess\ProgramAccessStateService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -21,9 +22,11 @@ class RegistrationService
 {
   /**
    * @param  ProgramAccessStateService  $accessStateService  États booléens des accès cursus
+   * @param  EcapStudentOnboardingService  $ecapOnboardingService  Dossier ECAP et groupes
    */
   public function __construct(
     private readonly ProgramAccessStateService $accessStateService,
+    private readonly EcapStudentOnboardingService $ecapOnboardingService,
   ) {}
 
   /**
@@ -134,6 +137,7 @@ class RegistrationService
         : null;
 
       $this->enrollInProgram($user, 'ecap', $sessionId, $isOnline, $vacationId);
+      $this->ecapOnboardingService->onboard($user, $sessionId, $isOnline);
     }
   }
 

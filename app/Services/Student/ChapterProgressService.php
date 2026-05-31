@@ -198,6 +198,35 @@ class ChapterProgressService
   }
 
   /**
+   * Chapitre suivant accessible après validation de l'étape courante.
+   *
+   * @return array{id: int, title: string}|null
+   */
+  public function nextChapterFor(User $user, Chapter $chapter): ?array
+  {
+    $steps = $this->curriculumFor($user, $chapter);
+
+    foreach ($steps as $index => $step) {
+      if ((int) $step['id'] !== (int) $chapter->id) {
+        continue;
+      }
+
+      $next = $steps[$index + 1] ?? null;
+
+      if ($next === null || ($next['status'] ?? 'locked') === 'locked') {
+        return null;
+      }
+
+      return [
+        'id' => (int) $next['id'],
+        'title' => (string) $next['title'],
+      ];
+    }
+
+    return null;
+  }
+
+  /**
    * Résout ou crée l'inscription du fidèle pour le programme du chapitre.
    */
   private function resolveEnrollment(User $user, Chapter $chapter): ?Enrollment

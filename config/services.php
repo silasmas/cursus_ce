@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'youtube_mirror' => [
+        'cookies_browser' => env('YOUTUBE_MIRROR_COOKIES_BROWSER'),
+    ],
+
 ];

@@ -10,6 +10,7 @@ use App\Services\Student\AssessmentAttemptService;
 use App\Services\Student\AssessmentReadinessService;
 use App\Services\Student\ChapterProgressService;
 use App\Services\Student\ModuleExitQuizService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -196,6 +197,24 @@ class AssessmentController extends Controller
     }
 
     return Inertia::render('Assessment/Result', $this->attemptService->resultPayload($attempt));
+  }
+
+  /**
+   * Mise à jour temps réel du résultat (correction, avis acteurs).
+   */
+  public function resultFeed(Request $request, Assessment $assessment, AssessmentAttempt $attempt): JsonResponse
+  {
+    $user = $request->user('member');
+
+    if ($attempt->user_id !== $user->id || $attempt->assessment_id !== $assessment->id) {
+      abort(403);
+    }
+
+    if ($attempt->submitted_at === null) {
+      return response()->json(['message' => 'Tentative non soumise.'], 422);
+    }
+
+    return response()->json($this->attemptService->resultPayload($attempt));
   }
 
   /**
