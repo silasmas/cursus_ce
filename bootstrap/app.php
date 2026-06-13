@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: [
+            'run-production-deploy',
             '_system/run-deploy',
             'deploy/production',
         ]);

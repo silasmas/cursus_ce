@@ -101,33 +101,35 @@ class DeploymentMaintenancePanelWidget extends Widget
    */
   private function buildHttpDeployHelp(): array
   {
-    $routePath = trim((string) config('deployment.route_path', '_system/run-deploy'), '/');
+    $routePath = trim((string) config('deployment.route_path', 'run-production-deploy'), '/');
     $url = url('/'.$routePath);
+    $directUrl = url('/run-production-deploy.php');
     $tokenPlaceholder = 'VOTRE_TOKEN';
 
-    $browserUrl = $url.'?token='.$tokenPlaceholder;
+    $browserUrl = $directUrl.'?token='.$tokenPlaceholder;
+    $routeBrowserUrl = $url.'?token='.$tokenPlaceholder;
 
     $curlFull = implode("\n", [
-      'curl -X POST '.$url.' \\',
-      '  -H "X-Deployment-Token: '.$tokenPlaceholder.'" \\',
-      '  -H "Accept: application/json"',
+      '# Recommandé (hébergement mutualisé) — fichier direct dans public/ :',
+      $browserUrl,
+      '',
+      '# Alternative via route Laravel :',
+      $routeBrowserUrl,
     ]);
 
     $curlCustom = implode("\n", [
-      'curl -X POST '.$url.' \\',
-      '  -H "X-Deployment-Token: '.$tokenPlaceholder.'" \\',
-      '  -H "Content-Type: application/json" \\',
-      '  -d \'{"steps": ["migrate", "shield"]}\'',
+      $directUrl.'?token='.$tokenPlaceholder.'&steps=migrate,seed,shield',
     ]);
 
     $curlBrowser = implode("\n", [
-      '# Ouvrir dans le navigateur ou cron hébergeur (GET) :',
+      '# Cron hébergeur (GET) :',
       $browserUrl,
     ]);
 
     return [
       'enabled' => filled(config('deployment.token')),
-      'url' => $url,
+      'url' => $directUrl,
+      'routeUrl' => $url,
       'browserUrl' => $browserUrl,
       'steps' => ProductionDeployRunner::STEPS,
       'seederKey' => (string) config('deployment.production_seeder_key', 'production-starter'),

@@ -4,18 +4,16 @@ use App\Http\Controllers\System\ProductionDeployController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
-$deployPath = trim((string) config('deployment.route_path', '_system/run-deploy'), '/');
-$legacyPath = 'deploy/production';
+$deployPaths = array_values(array_unique(array_filter([
+  trim((string) config('deployment.route_path', 'run-production-deploy'), '/'),
+  'run-production-deploy',
+  '_system/run-deploy',
+  'deploy/production',
+])));
 
-$registerDeployRoute = static function (string $path) use ($deployPath): void {
+foreach ($deployPaths as $index => $path) {
   Route::match(['get', 'post'], $path, [ProductionDeployController::class, 'invoke'])
     ->middleware(['deployment.token', 'throttle:'.config('deployment.rate_limit', 6).',1'])
     ->withoutMiddleware([ValidateCsrfToken::class])
-    ->name($path === $deployPath ? 'deploy.production' : 'deploy.production.legacy');
-};
-
-$registerDeployRoute($deployPath);
-
-if ($deployPath !== $legacyPath) {
-  $registerDeployRoute($legacyPath);
+    ->name($index === 0 ? 'deploy.production' : 'deploy.production.'.$index);
 }

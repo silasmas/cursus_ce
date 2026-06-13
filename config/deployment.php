@@ -21,7 +21,7 @@ return [
   | Route HTTP
   |--------------------------------------------------------------------------
   */
-  'route_path' => env('DEPLOYMENT_ROUTE', '_system/run-deploy'),
+  'route_path' => env('DEPLOYMENT_ROUTE', 'run-production-deploy'),
 
   /*
   |--------------------------------------------------------------------------

@@ -174,27 +174,27 @@
     @else
       <dl class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
-          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">URL POST</dt>
+          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">URL directe (public/)</dt>
           <dd class="mt-1 truncate font-mono text-xs text-gray-950 dark:text-white" title="{{ $httpDeploy['url'] }}">
             {{ $httpDeploy['url'] }}
           </dd>
         </div>
         <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
-          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Étapes par défaut</dt>
-          <dd class="mt-1 text-xs text-gray-950 dark:text-white">
-            {{ implode(' → ', $httpDeploy['steps']) }}
+          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Route Laravel (optionnelle)</dt>
+          <dd class="mt-1 truncate font-mono text-xs text-gray-950 dark:text-white" title="{{ $httpDeploy['routeUrl'] ?? '' }}">
+            {{ $httpDeploy['routeUrl'] ?? '—' }}
           </dd>
         </div>
         <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
           <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Authentification</dt>
           <dd class="mt-1 text-xs text-gray-950 dark:text-white">
-            En-tête <code class="font-mono">X-Deployment-Token</code>
+            Paramètre <code class="font-mono">?token=</code> dans l'URL
           </dd>
         </div>
         <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
-          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Limite</dt>
+          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Étapes exécutées</dt>
           <dd class="mt-1 text-xs text-gray-950 dark:text-white">
-            {{ $httpDeploy['rateLimit'] }} requêtes / minute / IP
+            {{ implode(' → ', $httpDeploy['steps']) }}
           </dd>
         </div>
       </dl>
