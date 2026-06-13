@@ -32,6 +32,6 @@ return [
   ],
 
   'steps' => [
-    'maintenance-production' => 'Exécutez migrations, Shield, storage et seeders de démarrage (cursus, session ECAP 20, calendrier) sans SSH — idéal pour initialiser la production.',
+    'maintenance-production' => 'Exécutez migrations, Shield, storage et seeders sans SSH. L\'encart CI/CD en bas du panneau fournit les commandes curl pour la route HTTP de déploiement.',
   ],
 ];

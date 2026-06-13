@@ -280,3 +280,8 @@ html:not(.dark) .fi-sidebar-group-label {
 .fi-resource-maintenance-production .fi-main-header .fi-header-heading {
   max-width: none;
 }
+
+.deployment-http-code code {
+  white-space: pre;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}

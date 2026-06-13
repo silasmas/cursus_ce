@@ -4,6 +4,7 @@ namespace App\Filament\Resources\DeploymentOperations\Widgets;
 
 use App\Filament\Concerns\ExecutesDeploymentOperations;
 use App\Filament\Concerns\SendsFilamentOperationFeedback;
+use App\Services\System\ProductionDeployRunner;
 use App\Services\System\ProductionSeederService;
 use App\Services\System\SystemDeploymentService;
 use Filament\Notifications\Notification;
@@ -79,6 +80,58 @@ class DeploymentMaintenancePanelWidget extends Widget
       'seederConfirms' => collect(app(ProductionSeederService::class)->all())
         ->mapWithKeys(fn (array $item, string $key): array => [$key => $item['confirm'] ?? 'Exécuter ce seeder ?'])
         ->all(),
+      'httpDeploy' => $this->buildHttpDeployHelp(),
+    ];
+  }
+
+  /**
+   * Données affichées dans l'encart route HTTP de déploiement.
+   *
+   * @return array{
+   *   enabled: bool,
+   *   url: string,
+   *   steps: list<string>,
+   *   seederKey: string,
+   *   rateLimit: int,
+   *   curlFull: string,
+   *   curlCustom: string,
+   *   curlInfo: string
+   * }
+   */
+  private function buildHttpDeployHelp(): array
+  {
+    $routePath = trim((string) config('deployment.route_path', 'deploy/production'), '/');
+    $url = url('/'.$routePath);
+    $tokenPlaceholder = 'VOTRE_TOKEN';
+
+    $curlFull = implode("\n", [
+      'curl -X POST '.$url.' \\',
+      '  -H "X-Deployment-Token: '.$tokenPlaceholder.'" \\',
+      '  -H "Accept: application/json"',
+    ]);
+
+    $curlCustom = implode("\n", [
+      'curl -X POST '.$url.' \\',
+      '  -H "X-Deployment-Token: '.$tokenPlaceholder.'" \\',
+      '  -H "Content-Type: application/json" \\',
+      '  -d \'{"steps": ["migrate", "shield"]}\'',
+    ]);
+
+    $curlInfo = implode("\n", [
+      'curl -X GET '.$url.' \\',
+      '  -H "X-Deployment-Token: '.$tokenPlaceholder.'" \\',
+      '  -H "Accept: application/json"',
+    ]);
+
+    return [
+      'enabled' => filled(config('deployment.token')),
+      'url' => $url,
+      'steps' => ProductionDeployRunner::STEPS,
+      'seederKey' => (string) config('deployment.production_seeder_key', 'production-starter'),
+      'rateLimit' => (int) config('deployment.rate_limit', 6),
+      'curlFull' => $curlFull,
+      'curlCustom' => $curlCustom,
+      'curlInfo' => $curlInfo,
     ];
   }
 

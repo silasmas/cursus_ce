@@ -6,6 +6,7 @@
   /** @var bool $migrationsExpandedDefault */
   /** @var array<string, array{label: string, items: array<int, array<string, mixed>>}> $seederGroups */
   /** @var array<string, string> $seederConfirms */
+  /** @var array{enabled: bool, url: string, steps: list<string>, seederKey: string, rateLimit: int, curlFull: string, curlCustom: string, curlInfo: string} $httpDeploy */
 @endphp
 
 <div class="fi-section col-span-full rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
@@ -132,6 +133,103 @@
         </div>
       </div>
     @endforeach
+  </div>
+
+  {{-- Route HTTP CI/CD --}}
+  <div
+    x-data="{
+      copiedKey: null,
+      copy(key, text) {
+        navigator.clipboard.writeText(text);
+        this.copiedKey = key;
+        setTimeout(() => { if (this.copiedKey === key) { this.copiedKey = null; } }, 2000);
+      },
+    }"
+    class="border-b border-gray-200 px-6 py-5 dark:border-white/10"
+  >
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div class="min-w-0 flex-1">
+        <h4 class="text-sm font-semibold text-gray-950 dark:text-white">
+          Déploiement via route HTTP (CI/CD)
+        </h4>
+        <p class="mt-1 max-w-none text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+          Alternative sans SSH pour enchaîner stockage, migrations, seeder
+          <code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-[11px] dark:bg-white/10">{{ $httpDeploy['seederKey'] }}</code>
+          et Shield depuis un pipeline ou un terminal.
+        </p>
+      </div>
+      <x-filament::badge :color="$httpDeploy['enabled'] ? 'success' : 'danger'">
+        {{ $httpDeploy['enabled'] ? 'Route active' : 'Route désactivée' }}
+      </x-filament::badge>
+    </div>
+
+    @if (! $httpDeploy['enabled'])
+      <div class="mt-4 rounded-lg bg-danger-50 p-4 ring-1 ring-danger-600/10 dark:bg-danger-500/10 dark:ring-danger-500/20">
+        <p class="text-sm text-danger-700 dark:text-danger-400">
+          Définissez <code class="font-mono text-xs">DEPLOYMENT_TOKEN</code> dans le fichier <code class="font-mono text-xs">.env</code> pour activer la route.
+          Générez un jeton avec :
+          <code class="mt-1 block font-mono text-xs">php -r "echo bin2hex(random_bytes(32));"</code>
+        </p>
+      </div>
+    @else
+      <dl class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
+          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">URL POST</dt>
+          <dd class="mt-1 truncate font-mono text-xs text-gray-950 dark:text-white" title="{{ $httpDeploy['url'] }}">
+            {{ $httpDeploy['url'] }}
+          </dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
+          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Étapes par défaut</dt>
+          <dd class="mt-1 text-xs text-gray-950 dark:text-white">
+            {{ implode(' → ', $httpDeploy['steps']) }}
+          </dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
+          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Authentification</dt>
+          <dd class="mt-1 text-xs text-gray-950 dark:text-white">
+            En-tête <code class="font-mono">X-Deployment-Token</code>
+          </dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
+          <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Limite</dt>
+          <dd class="mt-1 text-xs text-gray-950 dark:text-white">
+            {{ $httpDeploy['rateLimit'] }} requêtes / minute / IP
+          </dd>
+        </div>
+      </dl>
+
+      @foreach ([
+        'full' => ['label' => 'Pipeline complet', 'command' => $httpDeploy['curlFull']],
+        'custom' => ['label' => 'Étapes personnalisées (ex. migrate + shield)', 'command' => $httpDeploy['curlCustom']],
+        'info' => ['label' => 'Documentation JSON (GET)', 'command' => $httpDeploy['curlInfo']],
+      ] as $curlKey => $curlBlock)
+        <div class="mt-4">
+          <div class="mb-2 flex items-center justify-between gap-2">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              {{ $curlBlock['label'] }}
+            </p>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10"
+              x-on:click="copy('{{ $curlKey }}', @js($curlBlock['command']))"
+            >
+              <x-filament::icon icon="heroicon-m-clipboard-document" class="h-4 w-4" />
+              <span x-text="copiedKey === '{{ $curlKey }}' ? 'Copié' : 'Copier'"></span>
+            </button>
+          </div>
+          <pre class="deployment-http-code overflow-x-auto rounded-lg bg-gray-950 px-4 py-3 text-xs leading-relaxed text-gray-100"><code>{{ $curlBlock['command'] }}</code></pre>
+        </div>
+      @endforeach
+
+      <p class="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+        Variables <code class="font-mono">.env</code> :
+        <code class="font-mono">DEPLOYMENT_TOKEN</code>,
+        <code class="font-mono">DEPLOYMENT_ROUTE</code>,
+        <code class="font-mono">DEPLOYMENT_SEEDER_KEY</code>.
+        Remplacez <code class="font-mono">VOTRE_TOKEN</code> par la valeur secrète — ne la commitez jamais.
+      </p>
+    @endif
   </div>
 
   {{-- Badges d'état --}}

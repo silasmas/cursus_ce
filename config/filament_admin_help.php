@@ -337,9 +337,9 @@ return [
       ],
     ],
     'App.Filament.Resources.DeploymentOperations.DeploymentOperationResource' => [
-      'navigation_tooltip' => 'Maintenance production : exécutez les migrations (--force), régénérez les permissions Filament Shield et créez le lien public/storage sans SSH. Réservé aux super administrateurs ; chaque action est journalisée.',
+      'navigation_tooltip' => 'Maintenance production : migrations, Shield, storage et seeders sans SSH. Une route HTTP sécurisée (DEPLOYMENT_TOKEN) permet aussi le déploiement depuis un pipeline CI/CD. Réservé aux super administrateurs.',
       'pages' => [
-        'list' => 'Diagnostic migrations et stockage public, boutons d\'exécution et historique des opérations.',
+        'list' => 'Diagnostic migrations et stockage, boutons d\'exécution, encart curl pour la route HTTP de déploiement et historique des opérations.',
         'view' => 'Sortie console détaillée d\'une opération de maintenance.',
       ],
     ],
