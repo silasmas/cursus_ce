@@ -3,14 +3,24 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function (): void {
+            Route::middleware('web')
+                ->group(base_path('routes/deployment.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->validateCsrfTokens(except: [
+            'deploy/production',
+            'deploy/production/*',
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
@@ -18,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'mentor' => \App\Http\Middleware\EnsureUserIsMentor::class,
             'ecap.staff' => \App\Http\Middleware\EnsureEcapVacationStaff::class,
+            'deployment.token' => \App\Http\Middleware\ValidateDeploymentToken::class,
         ]);
 
         $middleware->redirectGuestsTo(fn () => route('login'));
