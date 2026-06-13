@@ -17,6 +17,7 @@ use App\Services\Portal\MemberSurveyService;
 use App\Services\Portal\PortalNotificationService;
 use App\Services\Public\RegistrationAvailabilityService;
 use App\Services\Mentor\MentorSettingService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -258,13 +259,13 @@ class HandleInertiaRequests extends Middleware
     private function publicRegistrationPayload(Request $request): array
     {
         if ($request->is('admin', 'admin/*')) {
-            return [
-                'is_open' => false,
-                'status' => 'disabled',
-                'message' => '',
-            ];
+            return RegistrationAvailabilityService::disabledPayload('');
         }
 
-        return app(RegistrationAvailabilityService::class)->publicPayload();
+        try {
+            return app(RegistrationAvailabilityService::class)->publicPayload();
+        } catch (QueryException) {
+            return RegistrationAvailabilityService::disabledPayload();
+        }
     }
 }

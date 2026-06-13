@@ -3,6 +3,8 @@
 namespace App\Services\Public;
 
 use App\Models\AcademicSession;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Détermine la disponibilité des inscriptions publiques (fenêtre ECAP).
@@ -18,16 +20,42 @@ class RegistrationAvailabilityService
   public const STATUS_CLOSED = 'closed';
 
   /**
+   * Payload par défaut lorsque la base n'est pas encore migrée ou indisponible.
+   *
+   * @return array<string, mixed>
+   */
+  public static function disabledPayload(string $message = 'Les inscriptions en ligne ne sont pas disponibles pour le moment.'): array
+  {
+    return [
+      'is_open' => false,
+      'status' => self::STATUS_DISABLED,
+      'message' => $message,
+      'registration_opens_at' => null,
+      'registration_closes_at' => null,
+      'seconds_until_open' => null,
+      'session_name' => null,
+    ];
+  }
+
+  /**
    * Session ECAP de référence pour l'affichage public (inscriptions, messages).
    */
   public function currentEcapSession(): ?AcademicSession
   {
-    $sessions = AcademicSession::query()
-      ->where('is_active', true)
-      ->whereHas('program', fn ($query) => $query->where('slug', 'ecap'))
-      ->with('program')
-      ->withCount('moduleSchedules')
-      ->get();
+    if (! $this->canQueryEcapSessions()) {
+      return null;
+    }
+
+    try {
+      $sessions = AcademicSession::query()
+        ->where('is_active', true)
+        ->whereHas('program', fn ($query) => $query->where('slug', 'ecap'))
+        ->with('program')
+        ->withCount('moduleSchedules')
+        ->get();
+    } catch (QueryException) {
+      return null;
+    }
 
     if ($sessions->isEmpty()) {
       return null;
@@ -98,23 +126,31 @@ class RegistrationAvailabilityService
    */
   public function publicPayload(): array
   {
-    $session = $this->currentEcapSession();
-    $status = $this->registrationStatus($session);
-    $secondsUntilOpen = null;
-
-    if ($status === self::STATUS_UPCOMING && $session?->registration_opens_at?->isFuture()) {
-      $secondsUntilOpen = max(0, (int) now()->diffInSeconds($session->registration_opens_at, false));
+    if (! $this->canQueryEcapSessions()) {
+      return self::disabledPayload();
     }
 
-    return [
-      'is_open' => $status === self::STATUS_OPEN,
-      'status' => $status,
-      'message' => $this->statusMessage($status, $session),
-      'registration_opens_at' => $session?->registration_opens_at?->format('d/m/Y H:i'),
-      'registration_closes_at' => $session?->registration_closes_at?->format('d/m/Y H:i'),
-      'seconds_until_open' => $secondsUntilOpen,
-      'session_name' => $session?->name,
-    ];
+    try {
+      $session = $this->currentEcapSession();
+      $status = $this->registrationStatus($session);
+      $secondsUntilOpen = null;
+
+      if ($status === self::STATUS_UPCOMING && $session?->registration_opens_at?->isFuture()) {
+        $secondsUntilOpen = max(0, (int) now()->diffInSeconds($session->registration_opens_at, false));
+      }
+
+      return [
+        'is_open' => $status === self::STATUS_OPEN,
+        'status' => $status,
+        'message' => $this->statusMessage($status, $session),
+        'registration_opens_at' => $session?->registration_opens_at?->format('d/m/Y H:i'),
+        'registration_closes_at' => $session?->registration_closes_at?->format('d/m/Y H:i'),
+        'seconds_until_open' => $secondsUntilOpen,
+        'session_name' => $session?->name,
+      ];
+    } catch (QueryException) {
+      return self::disabledPayload();
+    }
   }
 
   /**
@@ -196,5 +232,19 @@ class RegistrationAvailabilityService
         : 'Les inscriptions sont actuellement closes.',
       default => 'Les inscriptions en ligne ne sont pas disponibles pour le moment.',
     };
+  }
+
+  /**
+   * Vérifie que les tables nécessaires aux sessions ECAP existent (post-déploiement, pré-migration).
+   */
+  private function canQueryEcapSessions(): bool
+  {
+    try {
+      return Schema::hasTable('academic_sessions')
+        && Schema::hasTable('programs')
+        && Schema::hasTable('session_module_schedules');
+    } catch (\Throwable) {
+      return false;
+    }
   }
 }
