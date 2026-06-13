@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\ProgramSettings\Schemas;
 
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -51,10 +51,21 @@ class ProgramSettingForm
           ->columns(2),
         Section::make('Paramètres avancés')
           ->schema([
-            Textarea::make('settings')
-              ->label('Configuration JSON')
-              ->columnSpanFull()
-              ->helperText($help['settings']),
+            CheckboxList::make('settings.mentor_appointments.visible_channels')
+              ->label('Canaux de rendez-vous visibles (mentor)')
+              ->options([
+                'whatsapp' => 'WhatsApp',
+                'zoom' => 'Zoom',
+                'google_meet' => 'Google Meet',
+              ])
+              ->default(['whatsapp', 'zoom', 'google_meet'])
+              ->columns(3)
+              ->helperText('Sélectionnez les canaux autorisés pour les mentors sur ce cursus.'),
+            Toggle::make('settings.zoom.auto_create_link')
+              ->label('Génération automatique de lien Zoom')
+              ->default(false)
+              ->inline(false)
+              ->helperText('Si activé, la plateforme tente de créer un lien Zoom à la programmation du rendez-vous.'),
           ]),
       ]);
   }

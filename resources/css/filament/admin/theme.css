@@ -4,9 +4,19 @@
 @source '../../../../resources/views/filament/**/*';
 @source '../../../../vendor/wezlo/filament-search-spotlight/resources/views/**/*';
 
+/* Logo PHILA — blanc → orange (#F39200) */
+.phila-brand-logo,
+.fi-simple-header .fi-logo img {
+  filter: invert(52%) sepia(98%) saturate(1200%) hue-rotate(360deg) brightness(103%) contrast(101%);
+}
+
 /* Connexion admin — fond clair avec logo orange */
 .fi-simple-layout {
   background: linear-gradient(145deg, #ffffff 0%, #fff8f0 45%, #fef3e2 100%) !important;
+}
+
+.dark .fi-simple-layout {
+  background: linear-gradient(145deg, #0a0a0a 0%, #141210 45%, #1a1510 100%) !important;
 }
 
 .fi-simple-main-ctn {
@@ -15,19 +25,63 @@
   border-radius: 1rem;
 }
 
+.dark .fi-simple-main-ctn {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  border-color: rgba(243, 146, 0, 0.25);
+}
+
+.fi-simple-header {
+  text-align: center;
+}
+
+.fi-simple-header .fi-logo {
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
 .fi-simple-header .fi-logo img,
-.fi-topbar .fi-logo img {
-  filter: invert(52%) sepia(98%) saturate(1200%) hue-rotate(360deg) brightness(103%) contrast(101%);
+.fi-simple-header .phila-brand-logo {
+  height: 4.5rem !important;
+  width: auto;
+  max-width: 100%;
+}
+
+.fi-simple-header-heading {
+  font-size: 1.35rem;
+}
+
+/* Sélecteur de thème — page de connexion (invité) */
+.fi-phila-simple-toolbar {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+  padding: 0.35rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(243, 146, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(243, 146, 0, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.dark .fi-phila-simple-toolbar {
+  background: rgba(20, 20, 20, 0.92);
+  border-color: rgba(243, 146, 0, 0.3);
+}
+
+.fi-phila-simple-toolbar .fi-theme-switcher {
+  gap: 0.15rem;
+}
+
+.fi-phila-simple-toolbar .fi-theme-switcher-btn.fi-active {
+  color: #f39200;
+  background: rgba(243, 146, 0, 0.12);
 }
 
 /* Mode clair — sidebar blanche, actif orange */
 html:not(.dark) .fi-sidebar {
   background-color: #ffffff !important;
   border-right: 1px solid #ECECEE;
-}
-
-html:not(.dark) .fi-sidebar .fi-logo img {
-  filter: invert(52%) sepia(98%) saturate(1200%) hue-rotate(360deg) brightness(103%) contrast(101%);
 }
 
 html:not(.dark) .fi-sidebar-item-btn {
@@ -57,9 +111,6 @@ html:not(.dark) .fi-sidebar-group-label {
   background-color: #0A0A0A !important;
 }
 
-.dark .fi-sidebar .fi-logo img {
-  filter: invert(52%) sepia(98%) saturate(1200%) hue-rotate(360deg) brightness(103%) contrast(101%);
-}
 
 .dark .fi-sidebar-item.fi-active > .fi-sidebar-item-row > .fi-sidebar-item-btn,
 .dark .fi-sidebar-item.fi-active > .fi-sidebar-item-btn,
@@ -127,4 +178,105 @@ html:not(.dark) .fi-sidebar-group-label {
 .fi-sidebar-item-badge {
   background-color: #F39200 !important;
   color: #fff !important;
+}
+
+/* Visite guidée admin — modale à droite du menu, menu toujours visible */
+.shepherd-theme-phila.shepherd-element {
+  z-index: 9999;
+  max-width: 22rem;
+}
+
+.shepherd-theme-phila .shepherd-header {
+  background: #F39200 !important;
+  color: #fff !important;
+}
+
+.shepherd-theme-phila .shepherd-button-primary {
+  background: #F39200 !important;
+}
+
+.shepherd-theme-phila .shepherd-button-secondary {
+  color: #374151 !important;
+}
+
+.shepherd-tour-active-nav,
+.shepherd-tour-active-nav .fi-sidebar-item-button {
+  background-color: rgba(243, 146, 0, 0.12) !important;
+  border-radius: 0.5rem;
+}
+
+/*
+ * Menu latéral : conserver le layout Filament (flex + lg:sticky) pour que le
+ * contenu principal soit décalé quand le menu est ouvert. Défilement interne
+ * du menu sur les longues listes de navigation.
+ */
+@media (min-width: 1024px) {
+  .fi-body.fi-body-has-topbar.fi-body-has-navigation:not(.fi-body-has-top-navigation) .fi-sidebar.fi-sidebar-open {
+    top: 4rem;
+    max-height: calc(100dvh - 4rem);
+  }
+
+  .fi-body:not(.fi-body-has-topbar).fi-body-has-navigation:not(.fi-body-has-top-navigation) .fi-sidebar.fi-sidebar-open {
+    max-height: 100dvh;
+  }
+}
+
+.fi-sidebar.fi-sidebar-open {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.fi-sidebar-header-ctn {
+  flex-shrink: 0;
+}
+
+.fi-sidebar-nav {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+.fi-sidebar-footer {
+  flex-shrink: 0;
+}
+
+.fi-main-ctn {
+  min-width: 0;
+}
+
+/* Logo + nom PHILA-CE visibles en tête du menu latéral */
+.fi-sidebar-header-logo-ctn {
+  display: flex !important;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.fi-sidebar-header-logo-ctn .fi-logo {
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.125rem;
+  letter-spacing: -0.02em;
+  color: #0A0A0A;
+}
+
+.dark .fi-sidebar-header-logo-ctn .fi-logo {
+  color: #ffffff;
+}
+
+/* Maintenance production — panneau et widgets pleine largeur */
+.fi-resource-maintenance-production .fi-header-widgets {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.fi-resource-maintenance-production .fi-header-widgets .fi-wi-widget {
+  grid-column: 1 / -1;
+}
+
+.fi-resource-maintenance-production .fi-main-header .fi-header-heading {
+  max-width: none;
 }

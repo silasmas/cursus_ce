@@ -8,6 +8,7 @@ import { localDateTimeToIso } from '../../utils/appointmentTime';
  * @param {Object} props
  * @param {Array} [props.mentees=[]] Mentorés sélectionnables
  * @param {number|null} [props.fixedAssignmentId=null] Assignation fixe (fiche mentoré)
+ * @param {Array<{value: string, label: string}>} [props.channelOptions=[]] Canaux autorisés
  * @param {Function} props.onSubmit Callback soumission
  * @param {Object} props.form Formulaire Inertia useForm
  * @returns {JSX.Element}
@@ -15,14 +16,17 @@ import { localDateTimeToIso } from '../../utils/appointmentTime';
 export default function ScheduleAppointmentForm({
   mentees = [],
   fixedAssignmentId = null,
+  channelOptions = [],
   onSubmit,
   form,
 }) {
-  const channels = [
-    { value: 'whatsapp', label: 'WhatsApp' },
-    { value: 'zoom', label: 'Zoom' },
-    { value: 'google_meet', label: 'Google Meet' },
-  ];
+  const channels = channelOptions.length > 0
+    ? channelOptions
+    : [
+      { value: 'whatsapp', label: 'WhatsApp' },
+      { value: 'zoom', label: 'Zoom' },
+      { value: 'google_meet', label: 'Google Meet' },
+    ];
 
   const toggleMentee = (id) => {
     const current = form.data.assignment_ids ?? [];
@@ -91,7 +95,7 @@ export default function ScheduleAppointmentForm({
       </div>
 
       <div>
-        <label className="label-field">Lien de la réunion (Zoom / Meet)</label>
+        <label className="label-field">Lien de la réunion (Zoom / Meet / WhatsApp)</label>
         <input
           type="url"
           className="input-field"

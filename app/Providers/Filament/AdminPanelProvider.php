@@ -11,7 +11,8 @@ use App\Filament\Pages\Dashboard as AdminDashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
+use Filament\View\PanelsRenderHook;
+use Boquizo\FilamentScrollToTop\ScrollToTopPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -19,6 +20,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Wezlo\FilamentSearchSpotlight\FilamentSearchSpotlightPlugin;
+use App\Filament\Plugins\PhilaAdminTourPlugin;
+use Emuniq\FilamentBrowserNotifications\BrowserNotificationsPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -34,10 +37,11 @@ class AdminPanelProvider extends PanelProvider
       ->authGuard('admin')
       ->login(Login::class)
       ->brandName('PHILA-CE')
-      ->brandLogo(asset('images/phila-logo.png'))
-      ->brandLogoHeight('3.5rem')
-      ->darkModeBrandLogo(asset('images/phila-logo.png'))
+      ->brandLogo(fn () => view('filament.admin.brand-logo'))
+      ->brandLogoHeight('4rem')
+      ->darkModeBrandLogo(fn () => view('filament.admin.brand-logo'))
       ->favicon(asset('images/phila-logo.png'))
+      ->topbar()
       ->colors([
         'primary' => Color::hex('#F39200'),
       ])
@@ -66,9 +70,7 @@ class AdminPanelProvider extends PanelProvider
         AdminDashboard::class,
       ])
       ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-      ->widgets([
-        AccountWidget::class,
-      ])
+      ->widgets([])
       ->middleware([
         EncryptCookies::class,
         AddQueuedCookiesToResponse::class,
@@ -85,7 +87,20 @@ class AdminPanelProvider extends PanelProvider
           ->keyBinding('mod+k')
           ->placeholder('Rechercher une ressource, une page ou une action…')
           ->disableDefaultGlobalSearch(),
+        ScrollToTopPlugin::make(),
+        PhilaAdminTourPlugin::make(),
+        BrowserNotificationsPlugin::make()
+          ->dismissCooldownDays(90)
+          ->promptDelay(3),
       ])
+      ->renderHook(
+        PanelsRenderHook::SIMPLE_LAYOUT_START,
+        fn (): string => view('filament.admin.simple-toolbar')->render(),
+      )
+      ->renderHook(
+        PanelsRenderHook::BODY_END,
+        fn (): string => view('filament.admin.confetti')->render(),
+      )
       ->authMiddleware([
         Authenticate::class,
       ]);

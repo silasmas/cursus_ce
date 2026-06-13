@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\LegalDocuments\Schemas;
 
+use App\Filament\Support\AiWriterField;
 use App\Services\Legal\LegalDocumentService;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
@@ -40,7 +41,8 @@ class LegalDocumentForm
             Textarea::make('summary')
               ->label('Résumé (optionnel)')
               ->rows(3)
-              ->columnSpanFull(),
+              ->columnSpanFull()
+              ->hintAction(AiWriterField::legalDocumentSummary()),
             TextInput::make('version')
               ->label('Version')
               ->default('2024-1')

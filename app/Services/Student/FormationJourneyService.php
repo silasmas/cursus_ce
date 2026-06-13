@@ -277,6 +277,17 @@ class FormationJourneyService
       return (int) $enrollment->course_id;
     }
 
+    if ($enrollment?->academic_session_id) {
+      $sessionCourseId = Course::query()
+        ->where('program_id', $program->id)
+        ->where('academic_session_id', $enrollment->academic_session_id)
+        ->value('id');
+
+      if ($sessionCourseId) {
+        return (int) $sessionCourseId;
+      }
+    }
+
     $canonical = Course::query()
       ->where('program_id', $program->id)
       ->where('is_published', true)

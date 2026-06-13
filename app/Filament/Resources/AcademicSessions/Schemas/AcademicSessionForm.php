@@ -9,7 +9,6 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
@@ -91,21 +90,10 @@ class AcademicSessionForm
           ])
           ->columns(2),
         Section::make('Reprendre une session précédente')
-          ->description('À la création uniquement : copie calendrier, périodes, vacations, groupes et affectations acteurs.')
+          ->description('Copiez cours, quiz, TP et configuration depuis une génération antérieure, puis ajustez ce qui doit changer.')
           ->schema([
-            Select::make('duplicate_from_session_id')
-              ->label('Session modèle')
-              ->options(fn (): array => AcademicSession::query()
-                ->whereHas('program', fn ($q) => $q->where('slug', 'ecap'))
-                ->orderByDesc('generation_number')
-                ->pluck('name', 'id')
-                ->all())
-              ->searchable()
-              ->preload()
-              ->placeholder('Configuration vide')
-              ->helperText('Les cours, modules, examens et TP restent dans le programme ECAP ; seule la configuration de session est recopiée.')
-              ->dehydrated(false)
-              ->visibleOn('create'),
+            DuplicateEcapSessionFormFields::sourceSessionSelect(),
+            ...DuplicateEcapSessionFormFields::duplicationOptions(),
           ])
           ->collapsed()
           ->visibleOn('create')

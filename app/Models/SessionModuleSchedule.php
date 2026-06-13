@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Andreia\FilamentRecurrence\Casts\RecurrenceCast;
 use App\Enums\CalendarItemType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,6 +22,7 @@ class SessionModuleSchedule extends Model
     'session_period_id',
     'title',
     'description',
+    'recurrence',
     'starts_on',
     'ends_on',
     'sort_order',
@@ -33,6 +35,7 @@ class SessionModuleSchedule extends Model
   {
     return [
       'item_type' => CalendarItemType::class,
+      'recurrence' => RecurrenceCast::class,
       'starts_on' => 'date',
       'ends_on' => 'date',
       'sort_order' => 'integer',

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\VacationQuestions\Schemas;
 
 use App\Enums\EcapVacationRole;
 use App\Enums\VacationQuestionStatus;
+use App\Filament\Support\AiWriterField;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -99,7 +100,8 @@ class VacationQuestionForm
             Textarea::make('answer_body')
               ->label('Réponse')
               ->rows(5)
-              ->columnSpanFull(),
+              ->columnSpanFull()
+              ->hintAction(AiWriterField::vacationAnswer()),
             Select::make('answered_by_user_id')
               ->label('Répondu par')
               ->relationship('answeredBy', 'name')

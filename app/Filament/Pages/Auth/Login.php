@@ -12,6 +12,14 @@ use Illuminate\Contracts\Support\Htmlable;
 class Login extends BaseLogin
 {
   /**
+   * Affiche le logo PHILA-CE au-dessus du formulaire.
+   */
+  public function hasLogo(): bool
+  {
+    return true;
+  }
+
+  /**
    * Titre affiché sur la page de connexion.
    */
   public function getHeading(): string|Htmlable

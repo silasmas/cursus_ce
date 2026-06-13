@@ -7,15 +7,21 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "andreia/filament-recurrence": "^1.1",
         "bezhansalleh/filament-shield": "^4.2",
         "devletes/filament-timeline-view": "*",
+        "emuniq/filament-browser-notifications": "^1.1",
         "filament/filament": "^5.6",
+        "gboquizosanchez/filament-scroll-to-top": "^1.0",
         "inertiajs/inertia-laravel": "^3.1",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
+        "pachristos/filament-export-cleanup": "^1.1",
+        "pdro-lucas/filament-ai-writer": "^0.6.2",
         "spatie/laravel-permission": "^7.4",
         "tinusg/filament-hover-image-column": "*",
-        "wezlo/filament-search-spotlight": "*"
+        "wezlo/filament-search-spotlight": "*",
+        "yacoubalhaidari/filament-tour": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

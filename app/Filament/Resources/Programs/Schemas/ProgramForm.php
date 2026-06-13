@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Programs\Schemas;
 
+use App\Filament\Support\AiWriterField;
 use App\Services\Program\MergeApollosCeProgramService;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
@@ -42,7 +43,8 @@ class ProgramForm
                 : null),
             Textarea::make('description')
               ->label('Description')
-              ->columnSpanFull(),
+              ->columnSpanFull()
+              ->hintAction(AiWriterField::programDescription()),
             TextInput::make('sort_order')
               ->label('Ordre')
               ->required()

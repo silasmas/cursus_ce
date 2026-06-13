@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Mentor;
 use App\Enums\AssessmentType;
 use App\Http\Controllers\Controller;
 use App\Models\Assessment;
+use App\Services\Mentor\MentorAppointmentChannelService;
 use App\Services\Mentor\MentorStatsService;
 use App\Services\Student\MentorPortalService;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class FormsHubController extends Controller
    */
   public function __construct(
     private readonly MentorStatsService $statsService,
+    private readonly MentorAppointmentChannelService $channelService,
     private readonly MentorPortalService $mentorService,
   ) {}
 
@@ -33,6 +35,7 @@ class FormsHubController extends Controller
     $user = $request->user('member');
     $mentees = $this->mentorService->activeMenteesForMentor($user);
     $programIds = $mentees->pluck('program_id')->unique()->filter()->values();
+    $allowedChannels = $this->channelService->allowedValuesForAssignments($mentees);
 
     $assessments = Assessment::query()
       ->where('type', AssessmentType::Tp->value)
@@ -60,6 +63,7 @@ class FormsHubController extends Controller
         'program_name' => $assignment->program?->name,
       ])->values()->all(),
       'tpAssessments' => $assessments,
+      'appointmentChannelOptions' => $this->channelService->optionsFromValues($allowedChannels),
     ]);
   }
 }

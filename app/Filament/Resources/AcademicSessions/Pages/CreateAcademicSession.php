@@ -5,7 +5,8 @@ namespace App\Filament\Resources\AcademicSessions\Pages;
 use App\Filament\Concerns\SendsFilamentOperationFeedback;
 use App\Filament\Resources\AcademicSessions\AcademicSessionResource;
 use App\Models\AcademicSession;
-use App\Services\Ecap\DuplicateEcapSessionConfigurationService;
+use App\Services\Ecap\DuplicateEcapSessionOptions;
+use App\Services\Ecap\DuplicateEcapSessionService;
 use App\Services\Ecap\EcapGenerationCodeService;
 use App\Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
@@ -25,6 +26,11 @@ class CreateAcademicSession extends CreateRecord
   private ?int $duplicateFromSessionId = null;
 
   /**
+   * Options de duplication choisies dans le formulaire.
+   */
+  private ?DuplicateEcapSessionOptions $duplicateOptions = null;
+
+  /**
    * Assigne le code ECAP aléatoire et le numéro ordinal avant création.
    *
    * @param  array<string, mixed>  $data
@@ -41,12 +47,13 @@ class CreateAcademicSession extends CreateRecord
     $this->duplicateFromSessionId = filled($raw['duplicate_from_session_id'] ?? null)
       ? (int) $raw['duplicate_from_session_id']
       : null;
+    $this->duplicateOptions = DuplicateEcapSessionOptions::fromFormData($raw);
 
     return $data;
   }
 
   /**
-   * Recopie la configuration après création si une session modèle est choisie.
+   * Recopie le contenu pédagogique et la configuration après création si une session modèle est choisie.
    */
   protected function afterCreate(): void
   {
@@ -61,21 +68,18 @@ class CreateAcademicSession extends CreateRecord
     }
 
     try {
-      $counts = app(DuplicateEcapSessionConfigurationService::class)
-        ->duplicateFromSession($this->record, $source);
+      $service = app(DuplicateEcapSessionService::class);
+      $result = $service->duplicate(
+        $this->record,
+        $source,
+        $this->duplicateOptions ?? new DuplicateEcapSessionOptions(),
+      );
 
       $this->sendFilamentFeedback(
         Notification::make()
-          ->title('Configuration reprise')
+          ->title('Session reprise avec succès')
           ->success()
-          ->body(
-            'Depuis « '.$source->name.' » : '
-            .$counts['periods'].' période(s), '
-            .$counts['schedules'].' entrée(s) calendrier, '
-            .$counts['staff'].' affectation(s) acteur, '
-            .$counts['vacations'].' vacation(s), '
-            .$counts['groups'].' groupe(s).',
-          ),
+          ->body($service->buildSummaryMessage($source, $result)),
       );
     } catch (\Throwable $exception) {
       report($exception);

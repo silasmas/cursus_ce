@@ -189,13 +189,19 @@ function ClosureForm({ mentees }) {
 /**
  * Hub central des formulaires et démarches mentor.
  */
-export default function FormsHub({ summary, mentees = [], tpAssessments = [] }) {
+export default function FormsHub({
+  summary,
+  mentees = [],
+  tpAssessments = [],
+  appointmentChannelOptions = [],
+}) {
   const { flash } = usePage().props;
+  const defaultChannel = appointmentChannelOptions[0]?.value ?? 'zoom';
 
   const appointmentForm = useForm({
     assignment_ids: [],
     scheduled_at: '',
-    channel: 'zoom',
+    channel: defaultChannel,
     meeting_url: '',
     notes: '',
   });
@@ -282,6 +288,7 @@ export default function FormsHub({ summary, mentees = [], tpAssessments = [] }) 
           ) : (
             <ScheduleAppointmentForm
               mentees={mentees}
+              channelOptions={appointmentChannelOptions}
               form={appointmentForm}
               onSubmit={scheduleAppointment}
             />

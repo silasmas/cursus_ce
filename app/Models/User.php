@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password'])]
@@ -20,7 +21,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasFactory, HasPushSubscriptions, HasRoles, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -107,6 +108,14 @@ class User extends Authenticatable implements FilamentUser
     public function assignmentSubmissions(): HasMany
     {
         return $this->hasMany(AssignmentSubmission::class);
+    }
+
+    /**
+     * Sondage de satisfaction portail (une entrée par fidèle).
+     */
+    public function memberSurvey(): HasOne
+    {
+        return $this->hasOne(MemberSurvey::class);
     }
 
     /**

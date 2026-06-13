@@ -10,6 +10,7 @@ export default defineConfig({
         'resources/css/app.css',
         'resources/js/app.jsx',
         'resources/css/filament/admin/theme.css',
+        'resources/js/filament/admin-tour.js',
       ],
       refresh: true,
     }),

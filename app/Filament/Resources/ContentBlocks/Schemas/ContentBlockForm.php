@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ContentBlocks\Schemas;
 
+use App\Filament\Support\AiWriterField;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -66,7 +67,8 @@ class ContentBlockForm
             Textarea::make('body')
               ->label('Contenu texte')
               ->columnSpanFull()
-              ->helperText($help['body']),
+              ->helperText($help['body'])
+              ->hintAction(AiWriterField::chapterContent()),
             Select::make('media_asset_id')
               ->label('Média')
               ->relationship('mediaAsset', 'path')

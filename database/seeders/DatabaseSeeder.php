@@ -53,6 +53,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(AdminPermissionsSeeder::class);
         $this->call(FormationContentSeeder::class);
+        $this->call(EcapProductionSessionSeeder::class);
         $this->call(EcapSession20CalendarSeeder::class);
         $this->call(LegalDocumentSeeder::class);
         $this->call(PortalDemoSeeder::class);

@@ -23,6 +23,7 @@ use App\Http\Controllers\Ecap\StaffQuizGradingController;
 use App\Http\Controllers\Ecap\StaffTpController;
 use App\Http\Controllers\Student\EcapCalendarController;
 use App\Http\Controllers\Student\EcapMeditationController;
+use App\Http\Controllers\Student\MemberSurveyController;
 use App\Http\Controllers\Student\PortalSearchController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\QuizHistoryController;
@@ -63,6 +64,9 @@ Route::middleware('auth:member')->group(function () {
   Route::get('/mon-espace/tests/{assessment}/resultat/{attempt}', [AssessmentController::class, 'result'])->name('assessment.result');
   Route::get('/mon-espace/tests/{assessment}/resultat/{attempt}/feed', [AssessmentController::class, 'resultFeed'])->name('assessment.result.feed');
   Route::get('/mon-espace/mes-quiz', [QuizHistoryController::class, 'index'])->name('quiz.history');
+
+  Route::post('/mon-espace/sondage', [MemberSurveyController::class, 'store'])->name('member-survey.store');
+  Route::post('/mon-espace/sondage/reporter', [MemberSurveyController::class, 'snooze'])->name('member-survey.snooze');
 
   Route::get('/mon-espace/cours/{chapter}/tp', [AssignmentController::class, 'index'])->name('assignment.index');
   Route::post('/mon-espace/tp/{assessment}/soumettre', [AssignmentController::class, 'store'])->name('assignment.store');

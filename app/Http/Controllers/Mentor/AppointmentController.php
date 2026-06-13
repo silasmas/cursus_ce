@@ -6,6 +6,7 @@ use App\Enums\AppointmentChannel;
 use App\Http\Controllers\Controller;
 use App\Models\MentorAssignment;
 use App\Services\Mentor\MentorAppointmentService;
+use App\Services\Mentor\MentorAppointmentChannelService;
 use App\Services\Student\MentorPortalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class AppointmentController extends Controller
    */
   public function __construct(
     private readonly MentorAppointmentService $appointmentService,
+    private readonly MentorAppointmentChannelService $channelService,
     private readonly MentorPortalService $mentorService,
   ) {}
 
@@ -35,10 +37,22 @@ class AppointmentController extends Controller
       'assignment_ids' => ['required', 'array', 'min:1'],
       'assignment_ids.*' => ['integer', 'exists:mentor_assignments,id'],
       'scheduled_at' => ['required', 'date', 'after:now'],
-      'channel' => ['required', 'in:whatsapp,zoom,google_meet'],
+      'channel' => ['required', 'string'],
       'meeting_url' => ['nullable', 'url', 'max:500'],
       'notes' => ['nullable', 'string', 'max:2000'],
     ]);
+
+    $assignments = MentorAssignment::query()
+      ->where('mentor_id', $user->id)
+      ->whereIn('id', $validated['assignment_ids'])
+      ->where('status', 'active')
+      ->get();
+
+    $allowedChannels = $this->channelService->allowedValuesForAssignments($assignments);
+
+    if (! in_array($validated['channel'], $allowedChannels, true)) {
+      return back()->with('error', 'Canal non autorisé par la configuration du cursus.');
+    }
 
     $channel = AppointmentChannel::from($validated['channel']);
 
@@ -71,10 +85,16 @@ class AppointmentController extends Controller
 
     $validated = $request->validate([
       'scheduled_at' => ['required', 'date', 'after:now'],
-      'channel' => ['required', 'in:whatsapp,zoom,google_meet'],
+      'channel' => ['required', 'string'],
       'meeting_url' => ['nullable', 'url', 'max:500'],
       'notes' => ['nullable', 'string', 'max:2000'],
     ]);
+
+    $allowedChannels = $this->channelService->allowedValuesForProgram($assignment->program);
+
+    if (! in_array($validated['channel'], $allowedChannels, true)) {
+      return back()->with('error', 'Canal non autorisé par la configuration du cursus.');
+    }
 
     $this->appointmentService->scheduleForAssignment(
       $user,
@@ -101,10 +121,16 @@ class AppointmentController extends Controller
 
     $validated = $request->validate([
       'scheduled_at' => ['required', 'date', 'after:now'],
-      'channel' => ['required', 'in:whatsapp,zoom,google_meet'],
+      'channel' => ['required', 'string'],
       'meeting_url' => ['nullable', 'url', 'max:500'],
       'notes' => ['nullable', 'string', 'max:2000'],
     ]);
+
+    $allowedChannels = $this->channelService->allowedValuesForProgram($appointment->mentorAssignment?->program);
+
+    if (! in_array($validated['channel'], $allowedChannels, true)) {
+      return back()->with('error', 'Canal non autorisé par la configuration du cursus.');
+    }
 
     $this->appointmentService->updateAppointment(
       $user,

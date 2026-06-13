@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Course extends Model
 {
     protected $fillable = [
-        'program_id', 'slug', 'name', 'sort_order', 'is_published',
+        'program_id', 'academic_session_id', 'slug', 'name', 'sort_order', 'is_published',
     ];
 
     protected function casts(): array
@@ -23,6 +23,14 @@ class Course extends Model
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class);
+    }
+
+    /**
+     * Session ECAP à laquelle ce cours est rattaché (clone par génération).
+     */
+    public function academicSession(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSession::class);
     }
 
     public function courseModules(): HasMany

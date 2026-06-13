@@ -6,6 +6,7 @@ import FloatingEcapCalendar from '../UI/FloatingEcapCalendar';
 import PortalInstantSearch from './PortalInstantSearch';
 import PortalUserMenu from './PortalUserMenu';
 import EcapChatUnreadPoller from '../Ecap/EcapChatUnreadPoller';
+import MemberSurveyModal from '../Portal/MemberSurveyModal';
 
 /**
  * Layout pour l'espace connecté du fidèle (et menu mentor si applicable).
@@ -16,7 +17,15 @@ import EcapChatUnreadPoller from '../Ecap/EcapChatUnreadPoller';
  */
 export default function AppLayout({ children }) {
   const page = usePage();
-  const { auth, notifications, ecapPrivateChat, ecapTimeline, ecapStaffRoles, ecapStaffChat } = page.props;
+  const {
+    auth,
+    notifications,
+    mentorNotifications,
+    ecapPrivateChat,
+    ecapTimeline,
+    ecapStaffRoles,
+    ecapStaffChat,
+  } = page.props;
   const pageUrl = page.url ?? '';
   const hideFloatingChat = pageUrl.includes('/ecap/messages');
   const [chatUnread, setChatUnread] = useState(ecapPrivateChat?.unread_count ?? 0);
@@ -59,6 +68,7 @@ export default function AppLayout({ children }) {
             <NotificationBell
               initialNotifications={notifications?.items ?? []}
               initialUnreadCount={notifications?.unread_count ?? 0}
+              preferences={mentorNotifications ?? { sound: true, blink: true }}
             />
             <PortalUserMenu
               user={auth?.user}
@@ -86,6 +96,7 @@ export default function AppLayout({ children }) {
           pulse={chatPulse}
         />
       )}
+      <MemberSurveyModal />
     </div>
   );
 }

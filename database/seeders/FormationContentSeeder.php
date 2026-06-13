@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\AcademicSession;
 use App\Models\Chapter;
 use App\Models\Course;
 use App\Models\CourseModule;
@@ -90,48 +89,6 @@ class FormationContentSeeder extends Seeder
         'description' => 'Apollos CE — École d\'Apolos : formation biblique structurée (cursus ECAP).',
       ]);
 
-    $session = AcademicSession::query()->firstOrCreate(
-      ['code' => '2026-V1'],
-      [
-        'program_id' => $program->id,
-        'name' => 'Session ECAP 2026',
-        'generation_number' => 5,
-        'starts_on' => now()->startOfYear(),
-        'ends_on' => now()->endOfYear(),
-        'registration_opens_at' => now()->subWeek(),
-        'registration_closes_at' => now()->addMonths(2),
-        'is_active' => true,
-      ],
-    );
-
-    \App\Models\SessionVacation::query()->firstOrCreate(
-      [
-        'academic_session_id' => $session->id,
-        'code' => 'MATIN',
-      ],
-      [
-        'name' => 'Vacation du matin',
-        'time_starts' => '08:00:00',
-        'time_ends' => '12:00:00',
-        'sort_order' => 1,
-        'is_active' => true,
-      ],
-    );
-
-    \App\Models\SessionVacation::query()->firstOrCreate(
-      [
-        'academic_session_id' => $session->id,
-        'code' => 'SOIR',
-      ],
-      [
-        'name' => 'Vacation du soir',
-        'time_starts' => '14:00:00',
-        'time_ends' => '18:00:00',
-        'sort_order' => 2,
-        'is_active' => true,
-      ],
-    );
-
     $course = $this->createCourse($program, 'fondamentaux-apollos', 'Fondamentaux Apollos', 1);
     $module1 = $this->createModule($course, 'Chap. 1 — Nouvelle naissance', 1);
     $module2 = $this->createModule($course, 'Chap. 2 — L\'Église', 2);
@@ -161,108 +118,6 @@ class FormationContentSeeder extends Seeder
       'Méditation — Éphésiens (observation)',
       'Méditation — Éphésiens (interprétation & application)',
     ]);
-
-    \App\Models\SessionModuleSchedule::query()->firstOrCreate(
-      [
-        'academic_session_id' => $session->id,
-        'course_module_id' => $module1->id,
-        'item_type' => \App\Enums\CalendarItemType::Module,
-      ],
-      [
-        'starts_on' => now()->startOfYear(),
-        'ends_on' => now()->startOfYear()->addMonths(3),
-        'sort_order' => 1,
-      ],
-    );
-
-    \App\Models\SessionModuleSchedule::query()->firstOrCreate(
-      [
-        'academic_session_id' => $session->id,
-        'course_module_id' => $module2->id,
-        'item_type' => \App\Enums\CalendarItemType::Module,
-      ],
-      [
-        'starts_on' => now()->startOfYear()->addMonths(3)->addDay(),
-        'ends_on' => now()->startOfYear()->addMonths(6),
-        'sort_order' => 2,
-      ],
-    );
-
-    \App\Models\SessionModuleSchedule::query()->firstOrCreate(
-      [
-        'academic_session_id' => $session->id,
-        'course_module_id' => $module3->id,
-        'item_type' => \App\Enums\CalendarItemType::Module,
-      ],
-      [
-        'starts_on' => now()->startOfYear()->addMonths(4),
-        'ends_on' => now()->startOfYear()->addMonths(5),
-        'sort_order' => 3,
-      ],
-    );
-
-    \App\Models\SessionModuleSchedule::query()->firstOrCreate(
-      [
-        'academic_session_id' => $session->id,
-        'course_module_id' => $module4->id,
-        'item_type' => \App\Enums\CalendarItemType::Module,
-      ],
-      [
-        'starts_on' => now()->startOfYear()->addMonths(5)->addDay(),
-        'ends_on' => now()->startOfYear()->addMonths(6),
-        'sort_order' => 4,
-      ],
-    );
-
-    $coursesPeriod = \App\Models\SessionPeriod::query()->firstOrCreate(
-      [
-        'academic_session_id' => $session->id,
-        'type' => \App\Enums\SessionPeriodType::Courses,
-      ],
-      [
-        'name' => 'Période des cours',
-        'starts_on' => now()->startOfYear(),
-        'ends_on' => now()->startOfYear()->addMonths(8),
-        'sort_order' => 1,
-        'is_active' => true,
-      ],
-    );
-
-    \App\Models\SessionPeriodContent::query()->firstOrCreate(
-      [
-        'session_period_id' => $coursesPeriod->id,
-        'content_type' => \App\Enums\PeriodContentType::CourseModule,
-        'content_id' => $module1->id,
-      ],
-      ['sort_order' => 1],
-    );
-
-    \App\Models\SessionPeriodContent::query()->firstOrCreate(
-      [
-        'session_period_id' => $coursesPeriod->id,
-        'content_type' => \App\Enums\PeriodContentType::CourseModule,
-        'content_id' => $module2->id,
-      ],
-      ['sort_order' => 2],
-    );
-
-    \App\Models\SessionPeriodContent::query()->firstOrCreate(
-      [
-        'session_period_id' => $coursesPeriod->id,
-        'content_type' => \App\Enums\PeriodContentType::CourseModule,
-        'content_id' => $module3->id,
-      ],
-      ['sort_order' => 3],
-    );
-
-    \App\Models\SessionPeriodContent::query()->firstOrCreate(
-      [
-        'session_period_id' => $coursesPeriod->id,
-        'content_type' => \App\Enums\PeriodContentType::CourseModule,
-        'content_id' => $module4->id,
-      ],
-      ['sort_order' => 4],
-    );
 
     $this->seedModuleExitQuiz($program, $course, $module1);
     $this->seedModuleExitQuiz($program, $course, $module2);

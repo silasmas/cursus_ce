@@ -13,8 +13,10 @@ use App\Services\Ecap\EcapStaffRoleService;
 use App\Services\Ecap\VacationQuestionService;
 use App\Services\Student\MentorPortalService;
 use App\Support\UserPresentation;
+use App\Services\Portal\MemberSurveyService;
 use App\Services\Portal\PortalNotificationService;
 use App\Services\Public\RegistrationAvailabilityService;
+use App\Services\Mentor\MentorSettingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -186,7 +188,45 @@ class HandleInertiaRequests extends Middleware
             'ecapStaffChat' => fn () => $member && app(EcapPrivateChatService::class)->isStaffChatActor($member)
                 ? $this->ecapStaffChatPayload($member)
                 : null,
+            'analytics' => fn () => $this->analyticsPayload($request),
+            'mentorNotifications' => fn () => app(MentorSettingService::class)->frontendNotificationPreferences(),
+            'memberSurvey' => fn () => $member
+                ? app(MemberSurveyService::class)->promptPayload($member)
+                : null,
         ];
+    }
+
+    /**
+     * Configuration analytics partagée avec le portail Inertia (hors admin).
+     *
+     * @return array<string, mixed>
+     */
+    private function analyticsPayload(Request $request): array
+    {
+        if ($request->is('admin', 'admin/*')) {
+            return ['enabled' => false, 'driver' => 'none'];
+        }
+
+        $driver = (string) config('analytics.driver', 'none');
+
+        if ($driver === 'plausible' && filled(config('analytics.plausible.domain'))) {
+            return [
+                'enabled' => true,
+                'driver' => 'plausible',
+                'plausibleDomain' => config('analytics.plausible.domain'),
+                'plausibleScriptUrl' => config('analytics.plausible.script_url'),
+            ];
+        }
+
+        if ($driver === 'ga' && filled(config('analytics.ga.measurement_id'))) {
+            return [
+                'enabled' => true,
+                'driver' => 'ga',
+                'gaMeasurementId' => config('analytics.ga.measurement_id'),
+            ];
+        }
+
+        return ['enabled' => false, 'driver' => 'none'];
     }
 
     /**

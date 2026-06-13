@@ -4,7 +4,7 @@
  * Aide contextuelle admin Filament : info-bulles menu et descriptions de pages.
  */
 return [
-  'dashboard' => 'Tableau de bord admin : vue d’ensemble de PHILA-CE. Chaque entrée du menu latéral possède une icône ℹ — survolez-la pour savoir à quoi sert la rubrique avant d’y entrer.',
+  'dashboard' => 'Tableau de bord : indicateurs globaux, synthèse par cursus (inscriptions, progression, quiz, TP, certificats) et graphiques de tendance. Cliquez sur une carte ou une ligne pour ouvrir la rubrique concernée.',
 
   'navigation_groups' => [
     'Administration' => 'Gérez les comptes utilisateurs, les profils détaillés des fidèles et consultez le journal d\'audit pour tracer qui a modifié quoi dans le panneau.',
@@ -35,6 +35,12 @@ return [
         'list' => 'Consultez les profils fidèles complétés lors de l\'inscription.',
         'create' => 'Créez un profil fidèle manuellement.',
         'edit' => 'Modifiez le profil d\'un fidèle (coordonnées, parcours, vacation ECAP).',
+      ],
+    ],
+    'App.Filament.Resources.LoginEvents.LoginEventResource' => [
+      'navigation_tooltip' => 'Statistiques de connexion par appareil (mobile, tablette, ordinateur) pour orienter la décision app native vs web responsive.',
+      'pages' => [
+        'list' => 'Historique des connexions au portail fidèle et à l\'admin. Filtrez par appareil pour analyser l\'usage mobile.',
       ],
     ],
     'App.Filament.Resources.AuditLogs.AuditLogResource' => [
@@ -328,6 +334,13 @@ return [
         'list' => 'Jobs d\'export CSV/Excel et leur statut.',
         'create' => 'Lancez un nouvel export.',
         'edit' => 'Consultez le détail d\'un export.',
+      ],
+    ],
+    'App.Filament.Resources.DeploymentOperations.DeploymentOperationResource' => [
+      'navigation_tooltip' => 'Maintenance production : exécutez les migrations (--force), régénérez les permissions Filament Shield et créez le lien public/storage sans SSH. Réservé aux super administrateurs ; chaque action est journalisée.',
+      'pages' => [
+        'list' => 'Diagnostic migrations et stockage public, boutons d\'exécution et historique des opérations.',
+        'view' => 'Sortie console détaillée d\'une opération de maintenance.',
       ],
     ],
     'App.Filament.Resources.ReportSnapshots.ReportSnapshotResource' => [

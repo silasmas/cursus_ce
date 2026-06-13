@@ -241,10 +241,7 @@ class RegistrationService
       return;
     }
 
-    $course = $program->courses()
-      ->where('is_published', true)
-      ->orderBy('sort_order')
-      ->first();
+    $course = $this->resolveCourseForProgram($program, $sessionId);
 
     $enrollment = Enrollment::query()->firstOrCreate(
       [
@@ -261,11 +258,39 @@ class RegistrationService
 
     if ($programSlug === 'ecap' && $sessionId !== null) {
       $enrollment->update([
+        'course_id' => $course?->id ?? $enrollment->course_id,
         'is_online' => $isOnline,
         'session_vacation_id' => $isOnline ? null : $sessionVacationId,
         'academic_session_id' => $sessionId,
         'online_mode_updated_at' => now(),
       ]);
     }
+  }
+
+  /**
+   * Détermine le cours à associer à une inscription (priorité au cours cloné de la session ECAP).
+   *
+   * @param  \App\Models\Program  $program  Cursus cible
+   * @param  int|null  $sessionId  Session académique éventuelle
+   */
+  private function resolveCourseForProgram(\App\Models\Program $program, ?int $sessionId): ?\App\Models\Course
+  {
+    if ($sessionId !== null && $program->slug === 'ecap') {
+      $session = \App\Models\AcademicSession::query()->find($sessionId);
+
+      if ($session !== null) {
+        $sessionCourse = app(\App\Services\Ecap\DuplicateEcapPedagogicalContentService::class)
+          ->resolveCourseForSession($session);
+
+        if ($sessionCourse !== null) {
+          return $sessionCourse;
+        }
+      }
+    }
+
+    return $program->courses()
+      ->where('is_published', true)
+      ->orderBy('sort_order')
+      ->first();
   }
 }

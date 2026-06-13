@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Chapters\RelationManagers;
 
+use App\Filament\Support\AiWriterField;
 use App\Services\Content\ContentBlockMediaService;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -71,7 +72,8 @@ class ContentBlocksRelationManager extends RelationManager
         Textarea::make('body')
           ->label('Contenu texte')
           ->columnSpanFull()
-          ->helperText($help['body']),
+          ->helperText($help['body'])
+          ->hintAction(AiWriterField::chapterContent()),
         Select::make('media_asset_id')
           ->label('Média')
           ->relationship('mediaAsset', 'path')

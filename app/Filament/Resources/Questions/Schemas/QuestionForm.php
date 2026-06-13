@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Questions\Schemas;
 
 use App\Enums\QuestionType;
+use App\Filament\Support\AiWriterField;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -36,7 +37,8 @@ class QuestionForm
             Textarea::make('stem')
               ->label('Énoncé')
               ->required()
-              ->columnSpanFull(),
+              ->columnSpanFull()
+              ->hintAction(AiWriterField::questionStem()),
             TextInput::make('sort_order')
               ->label('Ordre')
               ->required()

@@ -3,8 +3,13 @@
 namespace App\Providers;
 
 use App\Enums\PeriodContentType;
+use App\Listeners\RecordUserLogin;
+use App\Services\Ai\SafeAiProvider;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use PdroLucas\FilamentAiWriter\Contracts\AiProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +18,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->extend(AiProvider::class, function (AiProvider $provider): SafeAiProvider {
+            return new SafeAiProvider($provider);
+        });
     }
 
     /**
@@ -30,5 +37,7 @@ class AppServiceProvider extends ServiceProvider
         if (request()->is('admin') || request()->is('admin/*')) {
             app()->setLocale('fr');
         }
+
+        Event::listen(Login::class, RecordUserLogin::class);
     }
 }

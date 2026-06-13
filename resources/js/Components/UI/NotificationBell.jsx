@@ -19,13 +19,21 @@ const typeIcons = {
  * @param {Object} props
  * @param {Array} props.initialNotifications Notifications initiales
  * @param {number} props.initialUnreadCount Compteur non lues
+ * @param {{sound?: boolean, blink?: boolean}} [props.preferences] Préférences signalement
  * @returns {JSX.Element}
  */
-export default function NotificationBell({ initialNotifications = [], initialUnreadCount = 0 }) {
+export default function NotificationBell({
+  initialNotifications = [],
+  initialUnreadCount = 0,
+  preferences = { sound: true, blink: true },
+}) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+  const [hasNewAlert, setHasNewAlert] = useState(false);
   const panelRef = useRef(null);
+  const lastUnreadRef = useRef(initialUnreadCount);
+  const blinkTimerRef = useRef(null);
 
   useEffect(() => {
     setNotifications(initialNotifications);
@@ -42,8 +50,20 @@ export default function NotificationBell({ initialNotifications = [], initialUnr
 
         if (response.ok) {
           const data = await response.json();
+          const nextUnread = data.unread_count ?? 0;
+
+          if (nextUnread > lastUnreadRef.current) {
+            setHasNewAlert(true);
+            window.setTimeout(() => setHasNewAlert(false), 5000);
+
+            if (preferences?.sound) {
+              playNotificationBeep();
+            }
+          }
+
+          lastUnreadRef.current = nextUnread;
           setNotifications(data.notifications ?? []);
-          setUnreadCount(data.unread_count ?? 0);
+          setUnreadCount(nextUnread);
         }
       } catch {
         // silencieux
@@ -53,6 +73,35 @@ export default function NotificationBell({ initialNotifications = [], initialUnr
     const interval = setInterval(poll, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!preferences?.blink) {
+      return undefined;
+    }
+
+    if (!hasNewAlert) {
+      document.title = document.title.replace(/^●\s/, '');
+      if (blinkTimerRef.current) {
+        window.clearInterval(blinkTimerRef.current);
+        blinkTimerRef.current = null;
+      }
+      return undefined;
+    }
+
+    let active = false;
+    blinkTimerRef.current = window.setInterval(() => {
+      active = !active;
+      document.title = active ? `● ${document.title.replace(/^●\s/, '')}` : document.title.replace(/^●\s/, '');
+    }, 700);
+
+    return () => {
+      if (blinkTimerRef.current) {
+        window.clearInterval(blinkTimerRef.current);
+        blinkTimerRef.current = null;
+      }
+      document.title = document.title.replace(/^●\s/, '');
+    };
+  }, [hasNewAlert, preferences?.blink]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -107,7 +156,9 @@ export default function NotificationBell({ initialNotifications = [], initialUnr
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-phila-gray-100 bg-white text-lg transition hover:border-phila-orange"
+        className={`relative flex h-10 w-10 items-center justify-center rounded-full border border-phila-gray-100 bg-white text-lg transition hover:border-phila-orange ${
+          hasNewAlert ? 'animate-pulse ring-2 ring-phila-orange/30' : ''
+        }`}
         aria-label="Notifications"
       >
         🔔
@@ -170,4 +221,32 @@ export default function NotificationBell({ initialNotifications = [], initialUnr
       )}
     </div>
   );
+}
+
+/**
+ * Émet un bip léger sans dépendance externe.
+ */
+function playNotificationBeep() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) {
+      return;
+    }
+
+    const audioContext = new AudioContextClass();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 880;
+    gainNode.gain.value = 0.04;
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.12);
+  } catch {
+    // Ignore les bloqueurs audio navigateur.
+  }
 }

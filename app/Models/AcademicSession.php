@@ -133,4 +133,20 @@ class AcademicSession extends Model
     {
         return $this->hasMany(VacationQuestion::class);
     }
+
+    /**
+     * Cours ECAP dédié à cette génération (clone pédagogique).
+     */
+    public function courses(): HasMany
+    {
+        return $this->hasMany(Course::class);
+    }
+
+    /**
+     * Modèles de cahier de méditation publiés pour cette session.
+     */
+    public function ecapMeditationTemplates(): HasMany
+    {
+        return $this->hasMany(EcapMeditationTemplate::class);
+    }
 }

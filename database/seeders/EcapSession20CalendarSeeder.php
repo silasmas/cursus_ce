@@ -29,24 +29,15 @@ class EcapSession20CalendarSeeder extends Seeder
       return;
     }
 
-    $session = AcademicSession::query()->firstOrCreate(
-      ['code' => '2026-V1'],
-      [
-        'program_id' => $program->id,
-        'name' => 'Session ECAP 20 — 2026',
-        'generation_number' => 20,
-        'starts_on' => '2026-05-11',
-        'ends_on' => '2026-07-17',
-        'is_active' => true,
-      ],
-    );
+    $session = AcademicSession::query()
+      ->where('code', EcapProductionSessionSeeder::SESSION_CODE)
+      ->first();
 
-    $session->update([
-      'name' => 'Session ECAP 20 — 2026',
-      'generation_number' => 20,
-      'starts_on' => '2026-05-11',
-      'ends_on' => '2026-07-17',
-    ]);
+    if ($session === null) {
+      $this->command?->warn('Session ECAP introuvable — exécutez EcapProductionSessionSeeder d\'abord.');
+
+      return;
+    }
 
     $coursesPeriod = SessionPeriod::query()->updateOrCreate(
       [

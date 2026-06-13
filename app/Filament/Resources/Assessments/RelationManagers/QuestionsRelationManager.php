@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Assessments\RelationManagers;
 
 use App\Enums\QuestionType;
 use App\Filament\Concerns\HasRelationManagerHelp;
+use App\Filament\Support\AiWriterField;
 use App\Models\Assessment;
 use App\Models\Chapter;
 use App\Models\Question;
@@ -64,7 +65,8 @@ class QuestionsRelationManager extends RelationManager
         Textarea::make('stem')
           ->label('Énoncé')
           ->required()
-          ->columnSpanFull(),
+          ->columnSpanFull()
+          ->hintAction(AiWriterField::questionStem()),
         Select::make('review_chapter_id')
           ->label('Chapitre de révision')
           ->options(fn (): array => $this->reviewChapterOptions($moduleId, $assessment))

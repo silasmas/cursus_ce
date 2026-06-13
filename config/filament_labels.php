@@ -170,6 +170,11 @@ return [
     'plural' => 'Participants prière',
     'navigation' => 'Participants',
   ],
+  'App.Filament.Resources.LoginEvents.LoginEventResource' => [
+    'singular' => 'Connexion',
+    'plural' => 'Connexions',
+    'navigation' => 'Connexions & appareils',
+  ],
   'App.Filament.Resources.AuditLogs.AuditLogResource' => [
     'singular' => 'Journal d\'audit',
     'plural' => 'Journaux d\'audit',
@@ -209,5 +214,10 @@ return [
     'singular' => 'TP mentor',
     'plural' => 'TP mentors à valider',
     'navigation' => 'TP mentors à valider',
+  ],
+  'App.Filament.Resources.DeploymentOperations.DeploymentOperationResource' => [
+    'singular' => 'Opération de maintenance',
+    'plural' => 'Maintenance production',
+    'navigation' => 'Maintenance production',
   ],
 ];

@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import PageLoader from './Components/Skeletons/PageLoader';
+import { initPortalAnalytics, trackPortalPageView } from './lib/portalAnalytics';
 
 /**
  * Enveloppe Inertia avec skeleton de chargement entre les pages.
@@ -21,6 +22,23 @@ function InertiaApp({ App, props }) {
   const [pendingUrl, setPendingUrl] = useState('/');
 
   useEffect(() => {
+    const analytics = props.initialPage?.props?.analytics;
+
+    if (analytics?.enabled) {
+      initPortalAnalytics(analytics);
+    }
+
+    const removeNavigate = router.on('navigate', (event) => {
+      const nextAnalytics = event.detail.page?.props?.analytics ?? analytics;
+
+      if (!nextAnalytics?.enabled) {
+        return;
+      }
+
+      const nextUrl = event.detail.page?.url ?? window.location.pathname;
+      trackPortalPageView(nextUrl, nextAnalytics);
+    });
+
     const removeStart = router.on('start', (event) => {
       const visit = event.detail.visit;
 
@@ -37,10 +55,11 @@ function InertiaApp({ App, props }) {
     });
 
     return () => {
+      removeNavigate();
       removeStart();
       removeFinish();
     };
-  }, []);
+  }, [props.initialPage?.props?.analytics]);
 
   return (
     <>

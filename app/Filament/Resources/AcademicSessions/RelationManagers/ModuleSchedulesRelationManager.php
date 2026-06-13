@@ -4,8 +4,10 @@ namespace App\Filament\Resources\AcademicSessions\RelationManagers;
 
 use App\Enums\CalendarItemType;
 use App\Filament\Concerns\HasRelationManagerHelp;
+use App\Filament\Support\AiWriterField;
 use App\Models\CourseModule;
 use App\Models\SessionPeriod;
+use Andreia\FilamentRecurrence\Forms\Components\RecurrenceField;
 use Devletes\FilamentTimelineView\Tables\Columns\TimelineEntry;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
@@ -85,7 +87,14 @@ class ModuleSchedulesRelationManager extends RelationManager
           ->label('Description')
           ->rows(2)
           ->visible(fn (Get $get): bool => $get('item_type') === CalendarItemType::Activity->value)
-          ->helperText($help['calendar']['description']),
+          ->helperText($help['calendar']['description'])
+          ->hintAction(AiWriterField::calendarActivityDescription()),
+        RecurrenceField::make('recurrence')
+          ->label('Récurrence')
+          ->visible(fn (Get $get): bool => $get('item_type') === CalendarItemType::Activity->value)
+          ->showStartDate()
+          ->showEndOptions()
+          ->helperText('Planifiez une activité répétitive (hebdomadaire, mensuelle, etc.).'),
         DatePicker::make('starts_on')
           ->label('Début')
           ->required()

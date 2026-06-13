@@ -10,6 +10,8 @@ use App\Models\MentorAssignment;
 use App\Models\User;
 use App\Services\Admin\AdminNotificationService;
 use App\Services\Portal\PortalNotificationService;
+use App\Services\Mentor\MentorSettingService;
+use App\Services\Program\ProgramSettingService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -27,6 +29,10 @@ class MentorAppointmentService
   public function __construct(
     private readonly PortalNotificationService $notificationService,
     private readonly AdminNotificationService $adminNotificationService,
+    private readonly ProgramSettingService $programSettingService,
+    private readonly MentorSettingService $mentorSettingService,
+    private readonly ZoomMeetingService $zoomMeetingService,
+    private readonly GoogleCalendarMeetingService $googleCalendarMeetingService,
   ) {}
 
   /**
@@ -44,12 +50,14 @@ class MentorAppointmentService
       throw new \RuntimeException('Assignation invalide.');
     }
 
+    $startsAt = Carbon::parse($scheduledAt);
+
     $appointment = MentorAppointment::query()->create([
       'mentor_id' => $mentor->id,
       'mentor_assignment_id' => $assignment->id,
-      'scheduled_at' => Carbon::parse($scheduledAt),
+      'scheduled_at' => $startsAt,
       'channel' => $channel->value,
-      'meeting_url' => $meetingUrl,
+      'meeting_url' => $this->resolveMeetingUrl($channel, $meetingUrl, $assignment->program, $startsAt, $mentor->name),
       'notes' => $notes,
       'status' => 'scheduled',
       'mentee_response' => AppointmentMenteeResponse::Pending->value,
@@ -79,10 +87,18 @@ class MentorAppointmentService
       throw new \RuntimeException('Impossible de modifier un rendez-vous passé.');
     }
 
+    $startsAt = Carbon::parse($scheduledAt);
+
     $appointment->update([
-      'scheduled_at' => Carbon::parse($scheduledAt),
+      'scheduled_at' => $startsAt,
       'channel' => $channel->value,
-      'meeting_url' => $meetingUrl,
+      'meeting_url' => $this->resolveMeetingUrl(
+        $channel,
+        $meetingUrl,
+        $appointment->mentorAssignment?->program,
+        $startsAt,
+        $mentor->name,
+      ),
       'notes' => $notes,
       'mentee_response' => AppointmentMenteeResponse::Pending->value,
       'responded_at' => null,
@@ -93,7 +109,7 @@ class MentorAppointmentService
     $mentee = $appointment->mentorAssignment?->mentee;
 
     if ($mentee) {
-      $this->notificationService->notify(
+      $this->notifyPortal(
         $mentee,
         PortalNotificationType::MeetingReminder,
         'Rendez-vous modifié',
@@ -179,7 +195,7 @@ class MentorAppointmentService
         default => $mentee->name.' a répondu au rendez-vous.',
       };
 
-      $this->notificationService->notify(
+      $this->notifyPortal(
         $mentor,
         PortalNotificationType::MeetingReminder,
         'Réponse au rendez-vous — '.$response->label(),
@@ -323,7 +339,7 @@ class MentorAppointmentService
       return;
     }
 
-    $this->notificationService->notify(
+    $this->notifyPortal(
       $mentee,
       PortalNotificationType::MeetingReminder,
       'Rendez-vous avec votre mentor',
@@ -331,6 +347,83 @@ class MentorAppointmentService
       '/mon-espace/mentor',
       'Répondre',
       ['appointment_id' => $appointment->id, 'channel' => $channel->value],
+    );
+  }
+
+  /**
+   * Résout le lien de réunion selon le canal et la configuration.
+   */
+  private function resolveMeetingUrl(
+    AppointmentChannel $channel,
+    ?string $meetingUrl,
+    ?\App\Models\Program $program,
+    Carbon $startsAt,
+    string $mentorName,
+  ): ?string {
+    if (filled($meetingUrl)) {
+      return $meetingUrl;
+    }
+
+    if (! $program) {
+      return $meetingUrl;
+    }
+
+    $topic = 'Mentorat PHILA-CE · '.$mentorName;
+    $settings = $this->mentorSettingService->current();
+
+    if ($channel === AppointmentChannel::Zoom) {
+      if (! $this->programSettingService->shouldAutoCreateZoomLink($program->id)) {
+        return $meetingUrl;
+      }
+
+      if (! $settings->zoom_auto_create_link) {
+        return $meetingUrl;
+      }
+
+      return $this->zoomMeetingService->createMeetingLink($topic, $startsAt, self::MEETING_DURATION_MINUTES) ?? $meetingUrl;
+    }
+
+    if ($channel === AppointmentChannel::GoogleMeet && $settings->google_meet_auto_create_link) {
+      return $this->googleCalendarMeetingService->createMeetLink($topic, $startsAt, self::MEETING_DURATION_MINUTES) ?? $meetingUrl;
+    }
+
+    return $meetingUrl;
+  }
+
+  /**
+   * Notifie en in-app ou in-app + email selon paramétrage mentorat.
+   */
+  private function notifyPortal(
+    User $user,
+    PortalNotificationType $type,
+    string $title,
+    string $body,
+    ?string $actionUrl = null,
+    ?string $actionLabel = null,
+    ?array $metadata = null,
+  ): void {
+    if ($this->mentorSettingService->current()->notify_with_email) {
+      $this->notificationService->notifyWithEmail(
+        $user,
+        $type,
+        $title,
+        $body,
+        $actionUrl,
+        $actionLabel,
+        $metadata,
+      );
+
+      return;
+    }
+
+    $this->notificationService->notify(
+      $user,
+      $type,
+      $title,
+      $body,
+      $actionUrl,
+      $actionLabel,
+      $metadata,
     );
   }
 }
