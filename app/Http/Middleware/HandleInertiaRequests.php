@@ -43,7 +43,9 @@ class HandleInertiaRequests extends Middleware
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->is('admin', 'admin/*')) {
+        $deployPath = trim((string) config('deployment.route_path', '_system/run-deploy'), '/');
+
+        if ($request->is('admin', 'admin/*') || $request->is($deployPath)) {
             return $next($request);
         }
 

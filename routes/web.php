@@ -32,6 +32,8 @@ use App\Http\Controllers\Student\MentorController;
 use App\Http\Controllers\Student\VacationQuestionController;
 use Illuminate\Support\Facades\Route;
 
+require __DIR__.'/deployment.php';
+
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 Route::get('/documents-legaux/{slug}', [LegalDocumentController::class, 'show'])->name('legal-documents.show');

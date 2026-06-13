@@ -202,7 +202,7 @@
       @foreach ([
         'full' => ['label' => 'Pipeline complet', 'command' => $httpDeploy['curlFull']],
         'custom' => ['label' => 'Étapes personnalisées (ex. migrate + shield)', 'command' => $httpDeploy['curlCustom']],
-        'info' => ['label' => 'Documentation JSON (GET)', 'command' => $httpDeploy['curlInfo']],
+        'info' => ['label' => 'Navigateur ou cron hébergeur (GET)', 'command' => $httpDeploy['curlInfo']],
       ] as $curlKey => $curlBlock)
         <div class="mt-4">
           <div class="mb-2 flex items-center justify-between gap-2">

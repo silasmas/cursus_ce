@@ -61,6 +61,12 @@ class ValidateDeploymentToken
       return $bodyToken;
     }
 
+    $queryToken = $request->query('token');
+
+    if (is_string($queryToken) && $queryToken !== '') {
+      return $queryToken;
+    }
+
     return null;
   }
 }

@@ -21,10 +21,10 @@ class ProductionDeployController extends Controller
   ) {}
 
   /**
-   * Exécute le pipeline de déploiement (POST).
+   * Exécute le pipeline de déploiement (GET ou POST).
    *
-   * Corps JSON optionnel : { "steps": ["migrate", "seed", "shield"] }
-   * En-tête requis : X-Deployment-Token ou Authorization: Bearer {token}
+   * Authentification : ?token=, X-Deployment-Token, Authorization: Bearer ou body JSON token.
+   * Corps JSON optionnel (POST) : { "steps": ["migrate", "seed", "shield"] }
    */
   public function invoke(Request $request): JsonResponse
   {
@@ -45,6 +45,7 @@ class ProductionDeployController extends Controller
         'message' => $result['success']
           ? 'Déploiement production terminé avec succès.'
           : 'Déploiement interrompu : une étape a échoué.',
+        'route' => url('/'.ltrim((string) config('deployment.route_path', '_system/run-deploy'), '/')),
         'steps' => $result['steps'],
         'available_steps' => ProductionDeployRunner::STEPS,
       ], $result['success'] ? 200 : 500);
@@ -57,23 +58,4 @@ class ProductionDeployController extends Controller
     }
   }
 
-  /**
-   * Retourne la documentation de la route (GET, jeton requis).
-   */
-  public function info(): JsonResponse
-  {
-    return response()->json([
-      'route' => url('/'.ltrim(config('deployment.route_path', 'deploy/production'), '/')),
-      'method' => 'POST',
-      'headers' => [
-        'X-Deployment-Token' => 'Jeton défini dans DEPLOYMENT_TOKEN',
-        'Accept' => 'application/json',
-      ],
-      'body' => [
-        'steps' => 'Optionnel — tableau ou liste CSV : storage, migrate, seed, shield',
-      ],
-      'default_steps' => ProductionDeployRunner::STEPS,
-      'production_seeder' => config('deployment.production_seeder_key'),
-    ]);
-  }
 }

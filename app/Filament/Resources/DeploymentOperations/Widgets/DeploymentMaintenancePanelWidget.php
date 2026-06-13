@@ -95,14 +95,17 @@ class DeploymentMaintenancePanelWidget extends Widget
    *   rateLimit: int,
    *   curlFull: string,
    *   curlCustom: string,
-   *   curlInfo: string
+   *   curlInfo: string,
+   *   browserUrl: string
    * }
    */
   private function buildHttpDeployHelp(): array
   {
-    $routePath = trim((string) config('deployment.route_path', 'deploy/production'), '/');
+    $routePath = trim((string) config('deployment.route_path', '_system/run-deploy'), '/');
     $url = url('/'.$routePath);
     $tokenPlaceholder = 'VOTRE_TOKEN';
+
+    $browserUrl = $url.'?token='.$tokenPlaceholder;
 
     $curlFull = implode("\n", [
       'curl -X POST '.$url.' \\',
@@ -117,21 +120,21 @@ class DeploymentMaintenancePanelWidget extends Widget
       '  -d \'{"steps": ["migrate", "shield"]}\'',
     ]);
 
-    $curlInfo = implode("\n", [
-      'curl -X GET '.$url.' \\',
-      '  -H "X-Deployment-Token: '.$tokenPlaceholder.'" \\',
-      '  -H "Accept: application/json"',
+    $curlBrowser = implode("\n", [
+      '# Ouvrir dans le navigateur ou cron hébergeur (GET) :',
+      $browserUrl,
     ]);
 
     return [
       'enabled' => filled(config('deployment.token')),
       'url' => $url,
+      'browserUrl' => $browserUrl,
       'steps' => ProductionDeployRunner::STEPS,
       'seederKey' => (string) config('deployment.production_seeder_key', 'production-starter'),
       'rateLimit' => (int) config('deployment.rate_limit', 6),
       'curlFull' => $curlFull,
       'curlCustom' => $curlCustom,
-      'curlInfo' => $curlInfo,
+      'curlInfo' => $curlBrowser,
     ];
   }
 
