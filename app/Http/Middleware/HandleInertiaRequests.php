@@ -43,7 +43,14 @@ class HandleInertiaRequests extends Middleware
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->is('admin', 'admin/*', 'run-production-deploy', '_system/run-deploy', 'deploy/production')) {
+        if ($request->is(
+            'admin',
+            'admin/*',
+            'run-production-deploy',
+            'run-bootstrap-admin',
+            '_system/run-deploy',
+            'deploy/production',
+        )) {
             return $next($request);
         }
 

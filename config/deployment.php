@@ -37,4 +37,17 @@ return [
   */
   'production_seeder_key' => env('DEPLOYMENT_SEEDER_KEY', 'production-starter'),
 
+  /*
+  |--------------------------------------------------------------------------
+  | Super administrateur initial (route bootstrap)
+  |--------------------------------------------------------------------------
+  */
+  'bootstrap_admin' => [
+    'email' => env('BOOTSTRAP_ADMIN_EMAIL', 'admin@ce.church'),
+    'password' => env('BOOTSTRAP_ADMIN_PASSWORD', 'silasmas'),
+    'name' => env('BOOTSTRAP_ADMIN_NAME', 'Administrateur CE'),
+  ],
+
+  'bootstrap_route_path' => env('BOOTSTRAP_ADMIN_ROUTE', 'run-bootstrap-admin'),
+
 ];
