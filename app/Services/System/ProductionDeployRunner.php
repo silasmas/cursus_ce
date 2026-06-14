@@ -45,10 +45,6 @@ class ProductionDeployRunner
    */
   public function run(?array $steps = null, ?User $user = null): array
   {
-    if (function_exists('set_time_limit')) {
-      set_time_limit(300);
-    }
-
     $steps = $this->normalizeSteps($steps);
     $summary = [
       'success' => true,
