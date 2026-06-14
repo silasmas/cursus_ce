@@ -279,6 +279,21 @@ class SystemDeploymentService
     ?User $user,
     callable $callback,
   ): DeploymentOperation {
+    if (! DeploymentOperationSupport::canPersist()) {
+      try {
+        $result = $callback();
+
+        return DeploymentOperationSupport::ephemeral($type, $command, $parameters, $result);
+      } catch (Throwable $exception) {
+        report($exception);
+
+        return DeploymentOperationSupport::ephemeral($type, $command, $parameters, [
+          'exit_code' => 1,
+          'output' => trim($exception->getMessage()),
+        ]);
+      }
+    }
+
     $operation = DeploymentOperation::query()->create([
       'type' => $type,
       'status' => DeploymentOperationStatus::Failed,

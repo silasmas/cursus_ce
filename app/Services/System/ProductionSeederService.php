@@ -79,15 +79,54 @@ class ProductionSeederService
       throw new InvalidArgumentException('Seeder inconnu ou classe invalide : '.$seederKey);
     }
 
+    $parameters = [
+      'seeder_key' => $seederKey,
+      'class' => $class,
+      'label' => $definition['label'] ?? $seederKey,
+    ];
+
+    if (! DeploymentOperationSupport::canPersist()) {
+      try {
+        $exitCode = Artisan::call('db:seed', [
+          '--class' => $class,
+          '--force' => true,
+        ]);
+
+        $output = trim(Artisan::output());
+
+        if ($output === '') {
+          $output = 'Seeder « '.($definition['label'] ?? $seederKey).' » terminé.';
+        }
+
+        return DeploymentOperationSupport::ephemeral(
+          DeploymentOperationType::SeederRun,
+          'db:seed',
+          $parameters,
+          [
+            'exit_code' => (int) $exitCode,
+            'output' => $output,
+          ],
+        );
+      } catch (Throwable $exception) {
+        report($exception);
+
+        return DeploymentOperationSupport::ephemeral(
+          DeploymentOperationType::SeederRun,
+          'db:seed',
+          $parameters,
+          [
+            'exit_code' => 1,
+            'output' => trim($exception->getMessage()),
+          ],
+        );
+      }
+    }
+
     $operation = DeploymentOperation::query()->create([
       'type' => DeploymentOperationType::SeederRun,
       'status' => DeploymentOperationStatus::Failed,
       'command' => 'db:seed',
-      'parameters' => [
-        'seeder_key' => $seederKey,
-        'class' => $class,
-        'label' => $definition['label'] ?? $seederKey,
-      ],
+      'parameters' => $parameters,
       'executed_by_user_id' => $user?->id,
       'started_at' => now(),
     ]);

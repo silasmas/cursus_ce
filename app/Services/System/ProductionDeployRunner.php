@@ -27,8 +27,8 @@ class ProductionDeployRunner
    * @var list<string>
    */
   public const STEPS = [
-    'storage',
     'migrate',
+    'storage',
     'seed',
     'shield',
   ];
@@ -100,6 +100,11 @@ class ProductionDeployRunner
         $normalized[] = $step;
       }
     }
+
+    usort(
+      $normalized,
+      static fn (string $left, string $right): int => array_search($left, self::STEPS, true) <=> array_search($right, self::STEPS, true),
+    );
 
     return $normalized;
   }
